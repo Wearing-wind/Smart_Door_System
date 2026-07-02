@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if user else 'Add' }} User - Smart Door Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="fas fa-{{ 'edit' if user else 'user-plus' }}"></i>
+        {{ 'Edit User' if user else 'Add New User' }}
+    </h1>
+    <a href="{{ url_for('users') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="user-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="employee_id">
+                        <i class="fas fa-id-badge"></i>
+                        Employee ID <span class="required">*</span>
+                    </label>
+                    <input type="text" id="employee_id" name="employee_id" required
+                           value="{{ user.employee_id if user else '' }}"
+                           {% if user %}readonly{% endif %}
+                           placeholder="e.g., EMP001">
+                    {% if user %}
+                    <small class="form-help">Employee ID cannot be changed</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="first_name">
+                        <i class="fas fa-user"></i>
+                        First Name <span class="required">*</span>
+                    </label>
+                    <input type="text" id="first_name" name="first_name" required
+                           value="{{ user.first_name if user else '' }}"
+                           placeholder="First name">
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name">
+                        <i class="fas fa-user"></i>
+                        Last Name <span class="required">*</span>
+                    </label>
+                    <input type="text" id="last_name" name="last_name" required
+                           value="{{ user.last_name if user else '' }}"
+                           placeholder="Last name">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i>
+                        Email                   </label>
+                    <input type="email" id="email" name="email"
+                           value="{{ user.email if user else '' }}"
+                           placeholder="email@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">
+                        <i class="fas fa-phone"></i>
+                        Phone 
+                    </label>
+                    <input type="tel" id="phone" name="phone"
+                           value="{{ user.phone if user else '' }}"
+                           placeholder="+977 9876543210">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="department">
+                        <i class="fas fa-building"></i>
+                        Department
+                    </label>
+                    <input type="text" id="department" name="department"
+                           value="{{ user.department if user else '' }}"
+                           placeholder="e.g., Engineering">
+                </div>
+
+                <div class="form-group">
+                    <label for="designation">
+                        <i class="fas fa-briefcase"></i>
+                        Designation
+                    </label>
+                    <input type="text" id="designation" name="designation"
+                           value="{{ user.designation if user else '' }}"
+                           placeholder="e.g., Software Engineer">
+                </div>
+            </div>
+            
+            {% if user %}
+            <div class="enrollment-info">
+                <h3><i class="fas fa-fingerprint"></i> Biometric Enrollment Status</h3>
+                <div class="enrollment-grid">
+                    <div class="enrollment-item {{ 'enrolled' if user.face_enrolled else '' }}">
+                        <div class="enrollment-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <div class="enrollment-details">
+                            <span class="enrollment-type">Face Recognition</span>
+                            <span class="enrollment-status-text">{{ 'Enrolled' if user.face_enrolled else 'Not Enrolled' }}</span>
+                        </div>
+                    </div>
+                    <div class="enrollment-item coming-soon">
+                        <div class="enrollment-icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <div class="enrollment-details">
+                            <span class="enrollment-type">Fingerprint</span>
+                            <span class="enrollment-status-text">Coming Soon</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="enrollment-help">
+                    <i class="fas fa-info-circle"></i>
+                    Face biometric data is enrolled via the enrollment scripts. Run <code>enroll_user.py</code> to enroll biometrics.
+                </p>
+            </div>
+            {% endif %}
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    {{ 'Update User' if user else 'Create User' }}
+                </button>
+                <a href="{{ url_for('users') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
