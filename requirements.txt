@@ -13,9 +13,6 @@ dlib>=19.22.0
 Flask>=2.0.0
 bcrypt>=4.0.0
 
-# SMS Notifications
-twilio>=8.0.0
-
 # Database
 # SQLite is included with Python
 

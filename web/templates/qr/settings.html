@@ -9,7 +9,7 @@
 {% block content %}
 <div class="page-header">
     <h1><i class="fas fa-sliders-h"></i> Gateway & Notification Settings</h1>
-    <p>Configure SMTP relays, secure webhooks, and SMS alert dispatchers</p>
+    <p>Configure SMTP relays and secure webhooks</p>
 </div>
 
 <form method="POST">
@@ -54,32 +54,6 @@
             </div>
         </div>
 
-        <!-- 3. SMS Gateway Settings -->
-        <div class="qr-glass-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
-                <h2 style="font-size: 1.25rem; margin: 0;"><i class="fas fa-sms"></i> SMS Alert Gateway</h2>
-                <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 22px;">
-                    <input type="checkbox" name="sms_enabled" {% if sms_enabled %}checked{% endif %} style="opacity: 0; width: 0; height: 0;">
-                    <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 22px;" class="slider"></span>
-                </label>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="sms_provider">SMS Provider</label>
-                    <select id="sms_provider" name="sms_provider">
-                        <option value="Simulated" {% if sms_provider == 'Simulated' %}selected{% endif %}>Simulated Logging</option>
-                        <option value="Twilio" {% if sms_provider == 'Twilio' %}selected{% endif %}>Twilio SMS</option>
-                        <option value="Infobip" {% if sms_provider == 'Infobip' %}selected{% endif %}>Infobip SMS</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="sms_api_key">Update Provider API Key</label>
-                    <input type="password" id="sms_api_key" name="sms_api_key" placeholder="{% if sms_key_exists %}•••••••••••••••• (Saved){% else %}Enter API Key{% endif %}">
-                </div>
-            </div>
-        </div>
 
         <!-- Submit actions -->
         <div class="qr-glass-card" style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 1rem; margin-bottom: 0; padding: 1.25rem;">

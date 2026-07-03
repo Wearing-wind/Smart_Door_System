@@ -58,7 +58,6 @@ def dashboard():
     # Retrieve system settings (SMTP, webhooks, SMS)
     email_enabled = access_controller.get_setting("email_notifications_enabled", "false") == "true"
     webhook_enabled = access_controller.get_setting("webhook_notifications_enabled", "false") == "true"
-    sms_enabled = access_controller.get_setting("sms_notifications_enabled", "false") == "true"
     
     return render_template(
         'qr/dashboard.html',
@@ -66,8 +65,7 @@ def dashboard():
         recent_logs=recent_logs,
         door_state=door_status.state.value,
         email_enabled=email_enabled,
-        webhook_enabled=webhook_enabled,
-        sms_enabled=sms_enabled
+        webhook_enabled=webhook_enabled
     )
 
 
@@ -457,26 +455,16 @@ def settings():
             webhook_enabled = request.form.get('webhook_enabled') == 'on'
             webhook_url = request.form.get('webhook_url', '').strip()
             
-            # 3. SMS toggles
-            sms_enabled = request.form.get('sms_enabled') == 'on'
-            sms_provider = request.form.get('sms_provider', 'Simulated').strip()
-            
             # Set settings in DB
             access_controller.set_setting("email_notifications_enabled", "true" if email_enabled else "false")
             access_controller.set_setting("alert_recipient_email", alert_recipient)
             access_controller.set_setting("webhook_notifications_enabled", "true" if webhook_enabled else "false")
             access_controller.set_setting("webhook_url", webhook_url)
-            access_controller.set_setting("sms_notifications_enabled", "true" if sms_enabled else "false")
-            access_controller.set_setting("sms_provider", sms_provider)
             
             # Handle password / credentials updates (encrypted values)
             smtp_pass = request.form.get('smtp_password', '').strip()
             if smtp_pass:
                 access_controller.set_setting("smtp_password", smtp_pass, encrypt=True)
-                
-            sms_api_key = request.form.get('sms_api_key', '').strip()
-            if sms_api_key:
-                access_controller.set_setting("sms_api_key", sms_api_key, encrypt=True)
                 
             system_log.info('QRSettings', f"System notification parameters updated: {session.get('admin_username')}")
             flash('Settings updated successfully.', 'success')
@@ -492,12 +480,9 @@ def settings():
     alert_recipient = access_controller.get_setting("alert_recipient_email", SMTP_USERNAME)
     webhook_enabled = access_controller.get_setting("webhook_notifications_enabled", "false") == "true"
     webhook_url = access_controller.get_setting("webhook_url", "")
-    sms_enabled = access_controller.get_setting("sms_notifications_enabled", "false") == "true"
-    sms_provider = access_controller.get_setting("sms_provider", "Simulated")
     
     # Check if credential variables are set in DB (to display placeholders/saved indication)
     smtp_pass_exists = bool(access_controller.get_setting("smtp_password"))
-    sms_key_exists = bool(access_controller.get_setting("sms_api_key"))
     
     return render_template(
         'qr/settings.html',
@@ -505,8 +490,5 @@ def settings():
         alert_recipient=alert_recipient,
         webhook_enabled=webhook_enabled,
         webhook_url=webhook_url,
-        sms_enabled=sms_enabled,
-        sms_provider=sms_provider,
-        smtp_pass_exists=smtp_pass_exists,
-        sms_key_exists=sms_key_exists
+        smtp_pass_exists=smtp_pass_exists
     )

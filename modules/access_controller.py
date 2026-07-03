@@ -175,12 +175,7 @@ class AccessController:
         if self.get_setting("email_notifications_enabled") == "true":
             self._send_email_notification(user, door, "Access Granted")
 
-        # 3. Simulated SMS Gateway
-        if self.get_setting("sms_notifications_enabled") == "true":
-            phone = user.get('phone')
-            if phone:
-                user_name = f"{user['first_name']} {user['last_name']}"
-                logger.info(f"[SMS SIMULATION] Sent SMS to {phone}: Access Granted at {door} for {user_name}.")
+
 
     def _dispatch_failure_alerts(self, qr_token: str, door: str, camera: str, reason: str):
         """Dispatches alerts for unauthorized or failed entry scans."""
