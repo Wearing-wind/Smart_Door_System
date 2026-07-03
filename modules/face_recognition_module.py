@@ -345,8 +345,15 @@ class FaceRecognitionEngine:
         b_norm = b / np.linalg.norm(b)
         return float(np.dot(a_norm, b_norm))
     
+    def is_available(self) -> bool:
+        """Check if face_recognition library is available."""
+        return face_recognition is not None
+
     def start(self) -> bool:
         """Start the face recognition engine."""
+        if not self.is_available():
+            logger.warning("Face recognition library is not available.")
+            return False
         if not self.camera.start():
             return False
         self._refresh_known_faces()
@@ -386,6 +393,8 @@ class FaceRecognitionEngine:
     
     def process_frame(self) -> FaceResult:
         """Process current camera frame for face recognition."""
+        if not self.is_available():
+            return FaceResult(status=FaceStatus.NO_FACE, frame=self.camera.get_frame())
         frame = self.camera.get_frame()
         
         if frame is None:

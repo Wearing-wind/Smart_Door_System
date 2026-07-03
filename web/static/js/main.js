@@ -2,14 +2,14 @@
  * Smart Door Security System - Admin Dashboard JavaScript
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Auto-hide flash messages after 5 seconds
     const flashMessages = document.querySelectorAll('.flash-message');
-    flashMessages.forEach(function(message) {
-        setTimeout(function() {
+    flashMessages.forEach(function (message) {
+        setTimeout(function () {
             message.style.opacity = '0';
             message.style.transform = 'translateY(-10px)';
-            setTimeout(function() {
+            setTimeout(function () {
                 message.remove();
             }, 300);
         }, 5000);
@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Confirm delete actions
     const deleteButtons = document.querySelectorAll('[data-confirm]');
-    deleteButtons.forEach(function(button) {
-        button.addEventListener('click', function(e) {
+    deleteButtons.forEach(function (button) {
+        button.addEventListener('click', function (e) {
             const message = this.getAttribute('data-confirm') || 'Are you sure?';
             if (!confirm(message)) {
                 e.preventDefault();
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Auto-refresh dashboard stats every 30 seconds
     if (document.querySelector('.stats-grid')) {
-        setInterval(function() {
+        setInterval(function () {
             // Only refresh if user is on the page
             if (!document.hidden) {
                 refreshStats();
@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add loading state to forms
     const forms = document.querySelectorAll('form');
-    forms.forEach(function(form) {
-        form.addEventListener('submit', function() {
+    forms.forEach(function (form) {
+        form.addEventListener('submit', function () {
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -91,16 +91,16 @@ function toggleUser(userId) {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            location.reload();
-        }
-    })
-    .catch(err => {
-        console.error('Failed to toggle user:', err);
-        alert('Failed to update user status');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                location.reload();
+            }
+        })
+        .catch(err => {
+            console.error('Failed to toggle user:', err);
+            alert('Failed to update user status');
+        });
 }
 
 /**
