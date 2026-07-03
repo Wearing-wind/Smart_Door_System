@@ -915,7 +915,7 @@ def _send_visitor_email_sync(email_address: str, first_name: str, last_name: str
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Entry Pass</title>
+    <title>Secure Smart Gate Entry Pass</title>
     <!--[if mso]>
     <noscript>
     <xml>
@@ -929,7 +929,7 @@ def _send_visitor_email_sync(email_address: str, first_name: str, last_name: str
         body {{
             margin: 0;
             padding: 0;
-            background-color: #e2e8f0;
+            background-color: #F4F7FC;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
         }}
@@ -946,276 +946,300 @@ def _send_visitor_email_sync(email_address: str, first_name: str, last_name: str
         .wrapper {{
             width: 100%;
             table-layout: fixed;
-            background-color: #e2e8f0;
-            padding-top: 40px;
-            padding-bottom: 40px;
+            background-color: #F4F7FC;
+            padding: 40px 10px;
         }}
-        .main-table {{
+        .main-card {{
             width: 100%;
             max-width: 420px;
             margin: 0 auto;
-            background-color: #ffffff;
+            background-color: #FFFFFF;
             border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }}
-        /* Top Dark Section */
+        /* Top Section */
         .top-section {{
-            background-color: #0f172a;
+            background-color: #0F172A;
             padding: 32px;
-            color: #ffffff;
+            color: #FFFFFF;
+            border-radius: 24px 24px 0 0;
         }}
-        .header-icon-bg {{
-            background-color: #10b981;
-            border-radius: 12px;
-            width: 44px;
-            height: 44px;
-            text-align: center;
-        }}
-        .valid-badge {{
-            background-color: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 9999px;
-            padding: 4px 12px;
-            font-size: 11px;
-            font-weight: 700;
-            color: #34d399;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
-        .pulse-dot {{
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: #10b981;
-            border-radius: 50%;
-            margin-right: 6px;
-        }}
-        /* Middle White Section */
+        /* Middle Section */
         .middle-section {{
-            background-color: #ffffff;
-            padding: 24px 32px 32px 32px;
+            background-color: #FFFFFF;
+            padding: 32px;
             text-align: center;
         }}
-        .qr-container {{
-            border: 2px solid #f1f5f9;
+        .qr-box {{
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
             border-radius: 16px;
             padding: 16px;
             display: inline-block;
-            background-color: #ffffff;
-            margin-top: 16px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15); /* Blue glow */
             margin-bottom: 24px;
         }}
-        .token-box {{
-            background-color: #f8fafc;
-            border: 1px solid #f1f5f9;
-            border-radius: 8px;
-            padding: 10px 16px;
+        .token-pill {{
+            background-color: #F3F4F6;
+            border: 1px solid #E5E7EB;
+            border-radius: 20px;
+            padding: 10px 20px;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            color: #1e293b;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
             display: inline-block;
+            letter-spacing: 0.5px;
             word-break: break-all;
         }}
-        /* Divider */
-        .divider {{
-            height: 0;
-            border-top: 3px dashed #cbd5e1;
-            margin: 0;
-        }}
-        .divider-dark {{
-            height: 0;
-            border-top: 3px dashed #334155;
-            margin: 0;
-        }}
-        /* Bottom Dark Section */
+        /* Bottom Section */
         .bottom-section {{
-            background-color: #0f172a;
-            padding: 24px 32px 32px 32px;
-            color: #ffffff;
+            background-color: #0F172A;
+            padding: 32px;
+            color: #FFFFFF;
+            border-radius: 0 0 24px 24px;
         }}
         .detail-label {{
             font-size: 10px;
             font-weight: 700;
-            color: #64748b;
+            color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 4px;
         }}
-        .detail-val {{
+        .detail-value {{
             font-size: 14px;
             font-weight: 600;
-            color: #ffffff;
-            margin: 0;
+            color: #FFFFFF;
         }}
-        .detail-val.red {{
-            color: #f87171;
-            font-family: 'Courier New', Courier, monospace;
-        }}
-        .detail-val.mono {{
-            font-family: 'Courier New', Courier, monospace;
-        }}
-        .warning-box {{
-            background-color: #1e293b;
+        .warning-card {{
+            background-color: #1E293B;
             border: 1px solid #334155;
             border-radius: 12px;
             padding: 16px;
-            margin-top: 32px;
+            margin-top: 24px;
+        }}
+        /* Instructions Section */
+        .instructions-section {{
+            max-width: 420px;
+            margin: 24px auto;
+            background-color: #FFFFFF;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #E5E7EB;
+        }}
+        .instructions-list {{
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+            color: #4B5563;
+            line-height: 1.6;
+        }}
+        .instructions-list li {{
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+        }}
+        /* Footer */
+        .footer-section {{
+            max-width: 420px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 12px;
+            color: #9CA3AF;
+            padding-bottom: 40px;
         }}
     </style>
 </head>
-<body>
-    <center class="wrapper">
-        <div class="webkit">
-            <table class="main-table" align="center" style="border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
-                <!-- TOP SECTION -->
-                <tr>
-                    <td class="top-section" style="background-color: #0f172a; padding: 32px; border-top-left-radius: 24px; border-top-right-radius: 24px;">
-                        
-                        <!-- Header row -->
-                        <table width="100%">
-                            <tr>
-                                <td width="44" valign="top">
-                                    <table class="header-icon-bg" style="background-color: #10b981; border-radius: 12px; width: 44px; height: 44px;">
-                                        <tr>
-                                            <td align="center" valign="middle" style="height: 44px;">
-                                                <img src="https://img.icons8.com/ios-filled/50/ffffff/lock.png" alt="Lock" width="20" height="20" style="display: block; margin: 0 auto;">
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                                <td valign="middle" style="padding-left: 12px;">
-                                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 1px;">Secure Smart Gate</div>
-                                    <div style="font-size: 10px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px;">Entry Pass</div>
-                                </td>
-                                <td align="right" valign="top">
-                                    <table style="background-color: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9999px;">
-                                        <tr>
-                                            <td style="padding: 4px 10px; font-size: 10px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">
-                                                &bull; VALID
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
+<body style="margin: 0; padding: 0; background-color: #F4F7FC;">
+    <table class="wrapper" width="100%" cellspacing="0" cellpadding="0" style="background-color: #F4F7FC; padding: 40px 10px;">
+        <tr>
+            <td align="center">
+                <!-- MAIN CARD -->
+                <table class="main-card" width="100%" cellspacing="0" cellpadding="0" style="max-width: 420px; background-color: #FFFFFF; border-radius: 24px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);">
+                    
+                    <!-- 1. HEADER SECTION -->
+                    <tr>
+                        <td class="top-section" style="background-color: #0F172A; padding: 32px; border-radius: 24px 24px 0 0;">
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="40" valign="middle">
+                                        <div style="background-color: #10B981; width: 40px; height: 40px; border-radius: 10px; display: inline-block; text-align: center;">
+                                            <img src="https://img.icons8.com/ios-filled/50/ffffff/lock.png" alt="Lock" width="20" height="20" style="margin-top: 10px; display: inline-block;">
+                                        </div>
+                                    </td>
+                                    <td valign="middle" style="padding-left: 12px;">
+                                        <div style="font-size: 13px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.5px;">SECURE SMART GATE</div>
+                                        <div style="font-size: 11px; font-weight: 600; color: #10B981; letter-spacing: 1px; margin-top: 2px;">ENTRY PASS</div>
+                                    </td>
+                                    <td align="right" valign="middle">
+                                        <span style="background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #22C55E; padding: 4px 10px; border-radius: 16px; font-size: 10px; font-weight: 700; letter-spacing: 1px; display: inline-block;">
+                                            <span style="display: inline-block; width: 6px; height: 6px; background-color: #22C55E; border-radius: 50%; margin-right: 4px; margin-bottom: 1px;"></span>VALID
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
 
-                        <!-- User Info -->
-                        <table width="100%" style="margin-top: 36px;">
-                            <tr>
-                                <td>
-                                    <div style="font-size: 14px; color: #94a3b8; margin-bottom: 6px;">Pass issued to</div>
-                                    <div style="font-size: 30px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">{visitor_name}</div>
-                                </td>
-                            </tr>
-                        </table>
+                            <!-- 2. PASS OWNER -->
+                            <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 32px;">
+                                <tr>
+                                    <td>
+                                        <div style="font-size: 13px; color: #94A3B8; margin-bottom: 4px;">Pass issued to</div>
+                                        <div style="font-size: 28px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px; line-height: 1.2;">{visitor_name}</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-                    </td>
-                </tr>
+                    <!-- 3. DIVIDER 1 (Dark to White) -->
+                    <tr>
+                        <td style="background-color: #0F172A; padding: 0;">
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="16" height="20" style="background-color: #F4F7FC; border-radius: 0 0 16px 0;"></td>
+                                    <td style="background-color: #FFFFFF; border-radius: 16px 16px 0 0;"></td>
+                                    <td width="16" height="20" style="background-color: #F4F7FC; border-radius: 0 0 0 16px;"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-                <!-- DIVIDER 1 (Dark to Light) -->
-                <tr>
-                    <td style="background-color: #ffffff; padding: 0 24px;">
-                        <table width="100%">
-                            <tr>
-                                <td style="border-top: 3px dashed #cbd5e1; height: 1px; line-height: 1px; font-size: 1px;">&nbsp;</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+                    <!-- 4. QR SCAN AREA -->
+                    <tr>
+                        <td class="middle-section" style="background-color: #FFFFFF; padding: 32px; text-align: center;">
+                            <div style="font-size: 12px; font-weight: 700; color: #6B7280; letter-spacing: 1.5px; margin-bottom: 24px;">SCAN AT CAMERA</div>
+                            
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td align="center">
+                                        <table cellspacing="0" cellpadding="0" class="qr-box" style="background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px; padding: 16px; display: inline-block; box-shadow: 0 0 24px rgba(59, 130, 246, 0.15); margin-bottom: 24px;">
+                                            <tr>
+                                                <td align="center">
+                                                    <img src="cid:qr_image" alt="QR Code" width="180" height="180" style="display: block; width: 180px; height: 180px;" />
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
 
-                <!-- MIDDLE SECTION -->
-                <tr>
-                    <td class="middle-section" style="background-color: #ffffff; padding: 24px 32px 32px 32px; text-align: center;">
-                        <div style="font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px;">Scan at Camera</div>
-                        
-                        <table width="100%">
-                            <tr>
-                                <td align="center">
-                                    <table style="border: 2px solid #f1f5f9; border-radius: 16px; margin-top: 16px; margin-bottom: 24px;">
-                                        <tr>
-                                            <td style="padding: 16px; background-color: #ffffff; border-radius: 16px;">
-                                                <img src="cid:qr_image" alt="QR Code" width="180" height="180" style="display: block; width: 180px; height: 180px; max-width: 180px; max-height: 180px;" />
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
+                            <div style="font-size: 10px; font-weight: 700; color: #6B7280; letter-spacing: 1.5px; margin-bottom: 8px;">TOKEN ID</div>
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td align="center">
+                                        <div class="token-pill" style="background-color: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 20px; padding: 10px 20px; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: 600; color: #374151; display: inline-block; letter-spacing: 0.5px; word-break: break-all;">
+                                            {token}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-                        <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px;">Token ID</div>
-                        <table width="100%">
-                            <tr>
-                                <td align="center">
-                                    <table style="background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px;">
-                                        <tr>
-                                            <td style="padding: 10px 16px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #1e293b;">
-                                                {token}
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+                    <!-- DIVIDER 2 (White to Dark) -->
+                    <tr>
+                        <td style="background-color: #0F172A; padding: 0;">
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="16" height="20" style="background-color: #F4F7FC; border-radius: 0 16px 0 0;"></td>
+                                    <td style="background-color: #FFFFFF; border-radius: 0 0 16px 16px;"></td>
+                                    <td width="16" height="20" style="background-color: #F4F7FC; border-radius: 16px 0 0 0;"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td style="background-color: #0F172A; height: 1px;">
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="20" style="background-color: #0F172A;"></td>
+                                    <td style="border-top: 2px dashed #334155;"></td>
+                                    <td width="20" style="background-color: #0F172A;"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-                <!-- DIVIDER 2 (Light to Dark) -->
-                <tr>
-                    <td style="background-color: #0f172a; padding: 0 24px;">
-                        <table width="100%">
-                            <tr>
-                                <td style="border-top: 3px dashed #334155; height: 1px; line-height: 1px; font-size: 1px;">&nbsp;</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+                    <!-- 5. PASS INFORMATION -->
+                    <tr>
+                        <td class="bottom-section" style="background-color: #0F172A; padding: 32px; border-radius: 0 0 24px 24px;">
+                            
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="50%" valign="top" style="padding-bottom: 24px;">
+                                        <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">AUTHORIZED GATES</div>
+                                        <div class="detail-value" style="font-size: 14px; font-weight: 600; color: #FFFFFF;">{allowed_doors}</div>
+                                    </td>
+                                    <td width="50%" align="right" valign="top" style="padding-bottom: 24px;">
+                                        <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">VALID UNTIL</div>
+                                        <div class="detail-value" style="font-size: 14px; font-weight: 600; color: #EF4444; font-family: 'Courier New', Courier, monospace;">{expiration_date}</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="50%" valign="top">
+                                        <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">DATE ISSUED</div>
+                                        <div class="detail-value" style="font-size: 14px; font-weight: 600; color: #FFFFFF; font-family: 'Courier New', Courier, monospace;">{issued_date}</div>
+                                    </td>
+                                    <td width="50%" align="right" valign="top">
+                                        <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">HOST</div>
+                                        <div class="detail-value" style="font-size: 14px; font-weight: 600; color: #FFFFFF;">N/A</div>
+                                    </td>
+                                </tr>
+                            </table>
 
-                <!-- BOTTOM SECTION -->
-                <tr>
-                    <td class="bottom-section" style="background-color: #0f172a; padding: 32px 32px 32px 32px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
-                        
-                        <table width="100%">
-                            <tr>
-                                <td width="50%" valign="top" style="padding-bottom: 24px;">
-                                    <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Authorized Gates</div>
-                                    <div class="detail-val" style="font-size: 14px; font-weight: 600; color: #ffffff;">{allowed_doors}</div>
-                                </td>
-                                <td width="50%" align="right" valign="top" style="padding-bottom: 24px;">
-                                    <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Validity Ends</div>
-                                    <div class="detail-val red" style="font-size: 14px; font-weight: 600; color: #f87171; font-family: 'Courier New', Courier, monospace;">{expiration_date}</div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="50%" valign="top">
-                                    <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Date Issued</div>
-                                    <div class="detail-val mono" style="font-size: 14px; font-weight: 600; color: #ffffff; font-family: 'Courier New', Courier, monospace;">{issued_date}</div>
-                                </td>
-                                <td width="50%" align="right" valign="top">
-                                    <div class="detail-label" style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Host</div>
-                                    <div class="detail-val" style="font-size: 14px; font-weight: 600; color: #cbd5e1;">N/A</div>
-                                </td>
-                            </tr>
-                        </table>
+                            <!-- 6. SECURITY NOTICE -->
+                            <table class="warning-card" width="100%" cellspacing="0" cellpadding="0" style="background-color: #1E293B; border: 1px solid #334155; border-radius: 12px; margin-top: 24px;">
+                                <tr>
+                                    <td width="36" valign="top" style="padding: 16px 0 16px 16px;">
+                                        <img src="https://img.icons8.com/color/48/000000/warning-shield.png" alt="Warning" width="22" height="22" style="display: block;">
+                                    </td>
+                                    <td style="padding: 16px 16px 16px 10px;">
+                                        <div style="font-size: 12px; font-weight: 700; color: #F59E0B; letter-spacing: 1px; margin-bottom: 6px;">NON-TRANSFERABLE</div>
+                                        <div style="font-size: 11px; color: #9CA3AF; line-height: 1.5;">This QR Pass is temporary and issued exclusively to the registered visitor. Sharing, copying, forwarding, or duplicating this QR code is strictly prohibited. Only the authorized holder may use this pass.</div>
+                                    </td>
+                                </tr>
+                            </table>
 
-                        <!-- Warning Footer -->
-                        <table width="100%" class="warning-box" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-top: 32px;">
-                            <tr>
-                                <td width="30" valign="top" style="padding: 16px 0 16px 16px;">
-                                    <img src="https://img.icons8.com/color/48/000000/warning-shield.png" alt="Warning" width="20" height="20" style="display: block;">
-                                </td>
-                                <td style="padding: 14px 16px 16px 10px;">
-                                    <div style="font-size: 12px; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Non-Transferable</div>
-                                    <div style="font-size: 12px; color: #94a3b8; line-height: 1.5;">This pass is temporary and unique to you. Keep it secure and do not forward it.</div>
-                                </td>
-                            </tr>
-                        </table>
+                        </td>
+                    </tr>
+                </table>
 
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </center>
+                <!-- 7. INSTRUCTIONS -->
+                <table class="instructions-section" width="100%" cellspacing="0" cellpadding="0" style="max-width: 420px; background-color: #FFFFFF; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #E5E7EB; margin-top: 24px;">
+                    <tr>
+                        <td style="padding: 24px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 12px;">Important Instructions</div>
+                            <table width="100%" cellspacing="0" cellpadding="0" style="font-size: 13px; color: #4B5563; line-height: 1.6;">
+                                <tr><td width="20" valign="top" style="color: #10B981;">✔</td><td>Present the QR directly to the camera</td></tr>
+                                <tr><td width="20" valign="top" style="color: #10B981;">✔</td><td>Keep the QR fully visible</td></tr>
+                                <tr><td width="20" valign="top" style="color: #10B981;">✔</td><td>Do not fold or damage the pass</td></tr>
+                                <tr><td width="20" valign="top" style="color: #10B981;">✔</td><td>Screenshot is accepted</td></tr>
+                                <tr><td width="20" valign="top" style="color: #EF4444;">✖</td><td>Expired passes will be rejected</td></tr>
+                                <tr><td width="20" valign="top" style="color: #EF4444;">✖</td><td>One successful scan invalidates the pass</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- 8. FOOTER -->
+                <table class="footer-section" width="100%" cellspacing="0" cellpadding="0" style="max-width: 420px; margin-top: 24px;">
+                    <tr>
+                        <td align="center" style="font-size: 12px; color: #9CA3AF; padding-bottom: 40px; line-height: 1.6;">
+                            <strong>Secure Smart Gate System</strong><br>
+                            Automated Email &bull; Do not reply.<br>
+                            Need Help? <a href="mailto:support@example.com" style="color: #3B82F6; text-decoration: none;">support@example.com</a>
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
 """

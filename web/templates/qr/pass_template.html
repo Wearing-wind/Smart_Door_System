@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Smart Gate Entry Pass</title>
+    <style>
+        :root {
+            --bg-color: #e2e5ec;
+            --dark-grad-start: #0f1626;
+            --dark-grad-end: #162238;
+            --light-bg: #ffffff;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #fbbf24;
+            --text-muted: #8b96a5;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .ticket-container {
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            background: var(--bg-color); /* Match background for cutouts */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticket-section {
+            padding: 30px;
+            position: relative;
+        }
+
+        /* --- Top Section --- */
+        .top-section {
+            background: linear-gradient(135deg, var(--dark-grad-start) 0%, var(--dark-grad-end) 100%);
+            color: #ffffff;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-box {
+            background-color: var(--accent-green);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .icon-box svg {
+            width: 20px;
+            height: 20px;
+            fill: #ffffff;
+        }
+
+        .header-titles {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gate-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .pass-subtitle {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-green);
+            letter-spacing: 1px;
+            margin: 2px 0 0 0;
+        }
+
+        .valid-badge {
+            background-color: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-green);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .valid-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .visitor-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .visitor-name {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- Middle Section --- */
+        .middle-section {
+            background-color: var(--light-bg);
+            text-align: center;
+            padding-bottom: 40px;
+        }
+
+        .scan-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+        }
+
+        .qr-wrapper {
+            background-color: var(--light-bg);
+            border-radius: 16px;
+            padding: 15px;
+            display: inline-block;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid #f1f5f9;
+            margin-bottom: 25px;
+        }
+
+        .qr-wrapper img {
+            width: 180px;
+            height: 180px;
+            display: block;
+        }
+
+        .token-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+
+        .token-string {
+            background-color: #f8fafc;
+            border: 1px solid #f1f5f9;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            display: inline-block;
+            word-break: break-all;
+            max-width: 90%;
+        }
+
+        /* --- Bottom Section --- */
+        .bottom-section {
+            background: linear-gradient(135deg, var(--dark-grad-start) 0%, var(--dark-grad-end) 100%);
+            color: #ffffff;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px 15px;
+            margin-bottom: 30px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .detail-item.right {
+            text-align: right;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .detail-value.red {
+            color: var(--accent-red);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .warning-box {
+            background-color: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .warning-box svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            fill: var(--accent-yellow);
+        }
+
+        .warning-content h4 {
+            color: var(--accent-yellow);
+            margin: 0 0 4px 0;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .warning-content p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        /* --- Ticket Dividers & Cutouts --- */
+        .divider {
+            position: relative;
+            height: 2px;
+            background: repeating-linear-gradient(to right, transparent, transparent 5px, rgba(148, 163, 184, 0.3) 5px, rgba(148, 163, 184, 0.3) 10px);
+            margin: 0;
+            z-index: 10;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 24px;
+            height: 24px;
+            background-color: var(--bg-color);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            z-index: 11;
+        }
+
+        .divider::before {
+            left: -12px;
+            box-shadow: inset -3px 0 5px rgba(0,0,0,0.05); /* Subtle inner shadow for cutout depth */
+        }
+
+        .divider::after {
+            right: -12px;
+            box-shadow: inset 3px 0 5px rgba(0,0,0,0.05);
+        }
+        
+        .divider.bottom {
+            background: repeating-linear-gradient(to right, transparent, transparent 5px, rgba(51, 65, 85, 0.5) 5px, rgba(51, 65, 85, 0.5) 10px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ticket-container">
+        <!-- TOP SECTION -->
+        <div class="ticket-section top-section">
+            <div class="header-row">
+                <div class="header-left">
+                    <div class="icon-box">
+                        <!-- Inline Padlock SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7zm9 13H6v-8h12v8z"/>
+                            <circle cx="12" cy="16" r="2"/>
+                        </svg>
+                    </div>
+                    <div class="header-titles">
+                        <p class="gate-title">SECURE SMART GATE</p>
+                        <p class="pass-subtitle">ENTRY PASS</p>
+                    </div>
+                </div>
+                <div class="valid-badge">VALID</div>
+            </div>
+            
+            <div class="visitor-info">
+                <div class="visitor-label">Pass issued to</div>
+                <h1 class="visitor-name">{{ visitor_name }}</h1>
+            </div>
+        </div>
+
+        <!-- FIRST DIVIDER -->
+        <div class="divider"></div>
+
+        <!-- MIDDLE SECTION -->
+        <div class="ticket-section middle-section">
+            <div class="scan-label">SCAN AT CAMERA</div>
+            
+            <div class="qr-wrapper">
+                <img src="{{ qr_code_url }}" alt="QR Code">
+            </div>
+
+            <div class="token-info">
+                <div class="token-label">TOKEN ID</div>
+                <div class="token-string">{{ token_id }}</div>
+            </div>
+        </div>
+
+        <!-- SECOND DIVIDER -->
+        <div class="divider bottom"></div>
+
+        <!-- BOTTOM SECTION -->
+        <div class="ticket-section bottom-section">
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">AUTHORIZED GATES</span>
+                    <span class="detail-value">Main Entrance / Reception</span>
+                </div>
+                <div class="detail-item right">
+                    <span class="detail-label">VALIDITY ENDS</span>
+                    <span class="detail-value red">{{ validity_date }}<br/>{{ validity_time }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">DATE ISSUED</span>
+                    <span class="detail-value">{{ date_issued }}</span>
+                </div>
+                <div class="detail-item right">
+                    <span class="detail-label">HOST</span>
+                    <span class="detail-value">{{ host_name }}</span>
+                </div>
+            </div>
+
+            <!-- WARNING BOX -->
+            <div class="warning-box">
+                <!-- Inline Warning SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M11.999 1.445c-1.127 0-2.195.59-2.735 1.547L1.139 17.382c-.52.923-.51 2.057.027 2.973.535.914 1.543 1.489 2.607 1.489h16.452c1.064 0 2.072-.575 2.607-1.489.537-.916.547-2.05.027-2.973L14.734 2.992c-.54-.957-1.608-1.547-2.735-1.547zm-.001 2c.403 0 .783.21.977.553l8.125 14.391c.184.326.181.716-.008 1.039-.189.324-.548.528-.925.528H3.714c-.377 0-.736-.204-.925-.528-.189-.323-.192-.713-.008-1.039l8.125-14.391c.194-.343.574-.553.977-.553z"/>
+                    <path d="M11 9h2v5h-2zm0 6h2v2h-2z"/>
+                </svg>
+                <div class="warning-content">
+                    <h4>NON-TRANSFERABLE</h4>
+                    <p>This pass is temporary and unique to you. Keep it secure and do not forward it.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
