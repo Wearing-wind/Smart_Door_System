@@ -376,14 +376,15 @@ class SmartDoorGUI:
                 self.face_status_var.set("Camera Error")
                 self._log_activity("ERROR: QR Pass scanner failed to start")
 
-            # Try to start face recognition (if library is available)
+            # Try to enable face recognition (shares QR scanner's camera)
             self._face_enabled = False
             try:
-                if self.face_engine.start():
+                if self.face_engine.is_available():
                     self._face_enabled = True
-                    self._log_activity("Face recognition module loaded (Hybrid Mode Active)")
+                    self.face_engine._refresh_known_faces()
+                    self._log_activity("Face recognition module loaded (Hybrid Mode: sharing camera with QR scanner)")
                 else:
-                    self._log_activity("Face recognition bypassed: library unavailable or camera issue")
+                    self._log_activity("Face recognition bypassed: library unavailable")
             except Exception as e:
                 self._log_activity(f"Face recognition bypassed: {e}")
 
@@ -411,23 +412,26 @@ class SmartDoorGUI:
         if not self._running:
             return
         try:
-            # 1. Scan for QR code
+            # 1. Always scan for QR code (this grabs the camera frame)
             qr_result = self.qr_scanner.process_frame()
+            self._update_qr_display(qr_result)
             
-            # If QR is detected, process QR authentication
-            if qr_result.status in (QRStatus.ACCESS_GRANTED, QRStatus.ACCESS_DENIED, QRStatus.QR_DETECTED, QRStatus.VALIDATING):
-                self._update_qr_display(qr_result)
+            # 2. Process QR authentication if a QR code was detected
+            if qr_result.status in (QRStatus.ACCESS_GRANTED, QRStatus.ACCESS_DENIED,
+                                     QRStatus.QR_DETECTED, QRStatus.VALIDATING):
                 self._process_qr_authentication(qr_result)
-            else:
-                # 2. No QR detected, try Face Recognition if enabled
-                if self._face_enabled:
-                    face_result = self.face_engine.process_frame()
-                    self._update_face_display(face_result)
+            
+            # 3. Also run face recognition on the same frame (if enabled)
+            if self._face_enabled:
+                # Get the raw camera frame from the QR scanner's camera
+                raw_frame = self.qr_scanner.get_current_frame()
+                if raw_frame is not None:
+                    face_result = self.face_engine.process_frame(external_frame=raw_frame)
+                    # Only update face display if no QR was actively detected
+                    # (to avoid overwriting the QR bounding box visualization)
+                    if qr_result.status == QRStatus.NO_QR:
+                        self._update_face_display(face_result)
                     self._process_face_authentication(face_result)
-                else:
-                    # Default: display QR scanner idle frame
-                    self._update_qr_display(qr_result)
-                    self._process_qr_authentication(qr_result)
             
             self._update_sensor_display()
         except Exception as exc:

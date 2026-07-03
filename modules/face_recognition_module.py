@@ -391,11 +391,16 @@ class FaceRecognitionEngine:
         if time.time() - self._last_cache_update > self._cache_ttl:
             self._refresh_known_faces()
     
-    def process_frame(self) -> FaceResult:
-        """Process current camera frame for face recognition."""
+    def process_frame(self, external_frame=None) -> FaceResult:
+        """Process current camera frame for face recognition.
+        
+        Args:
+            external_frame: Optional BGR frame from an external camera source.
+                           If provided, the engine's own camera is not used.
+        """
         if not self.is_available():
-            return FaceResult(status=FaceStatus.NO_FACE, frame=self.camera.get_frame())
-        frame = self.camera.get_frame()
+            return FaceResult(status=FaceStatus.NO_FACE, frame=external_frame)
+        frame = external_frame if external_frame is not None else self.camera.get_frame()
         
         if frame is None:
             return FaceResult(status=FaceStatus.CAMERA_ERROR)
