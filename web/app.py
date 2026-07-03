@@ -574,7 +574,10 @@ def settings():
             
     # GET request
     admin = admin_repo.get_by_id(session['admin_id'])
-    return render_template('settings.html', admin=admin)
+    # Retrieve current alert receiver email from AccessController (dynamic setting)
+    from modules.access_controller import AccessController
+    alert_email = AccessController().get_setting("alert_receiver_email") or EMAIL_RECIPIENT
+    return render_template('settings.html', admin=admin, alert_email=alert_email)
 
 
 # =====================
