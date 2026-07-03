@@ -14,7 +14,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from typing import Optional, Dict, Any, Tuple
-from cryptography.fernet import Fernet
+HAS_CRYPTOGRAPHY = True
+try:
+    from cryptography.fernet import Fernet
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
 import hashlib
 
 from config.settings import SECRET_KEY, SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD
@@ -37,6 +41,9 @@ class ConfigEncryptor:
         """Encrypt plain text config value."""
         if not plaintext:
             return ""
+        if not HAS_CRYPTOGRAPHY:
+            logger.warning("cryptography module not available. Storing configuration in plaintext.")
+            return plaintext
         try:
             f = Fernet(cls._get_key())
             return f.encrypt(plaintext.encode('utf-8')).decode('utf-8')
@@ -49,12 +56,16 @@ class ConfigEncryptor:
         """Decrypt cipher text config value."""
         if not ciphertext:
             return ""
+        if not HAS_CRYPTOGRAPHY:
+            logger.warning("cryptography module not available. Returning plaintext value.")
+            return ciphertext
         try:
             f = Fernet(cls._get_key())
             return f.decrypt(ciphertext.encode('utf-8')).decode('utf-8')
         except Exception as e:
-            logger.error(f"Decryption failed: {e}")
-            return ""
+            # If decryption fails (e.g. if the value was saved in plaintext during fallback), return as-is
+            logger.debug(f"Decryption failed, returning value in plaintext: {e}")
+            return ciphertext
 
 
 class AccessController:
