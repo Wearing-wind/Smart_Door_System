@@ -903,90 +903,378 @@ def _send_visitor_email_sync(email_address: str, first_name: str, last_name: str
         msg['From'] = smtp_username
         msg['To'] = email_address
 
-        html_body = f"""
-        <html>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; padding: 30px; margin: 0;">
-            <div style="max-width: 540px; margin: 0 auto;">
-                
-                <!-- Premium ID Card (Matches PVC screen style) -->
-                <div style="width: 500px; height: 315px; border-radius: 18px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; padding: 24px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 15px 35px rgba(0,0,0,0.4); margin: 0 auto;">
+        visitor_name = f"{first_name} {last_name}"
+        
+        # Load custom configurations dynamically from DB
+        support_email = ac.get_setting("support_email", "support@example.com") or "support@example.com"
+        support_phone = ac.get_setting("support_phone", "+977-9800000000") or "+977-9800000000"
+        website = ac.get_setting("website", "http://127.0.0.1:5000") or "http://127.0.0.1:5000"
+
+        html_body = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Smart Gate Entry Pass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1E293B;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <!-- Outer Container -->
+                <table border="0" cellpadding="0" cellspacing="0" width="680" style="background-color: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-collapse: collapse; overflow: hidden;">
                     
-                    <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 10px; width: 100%;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 18px; font-weight: bold; letter-spacing: 0.5px; color: #3b82f6;">SMART GATE</span>
-                        </div>
-                        <div style="font-size: 11px; background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(96, 165, 250, 0.3); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">GUEST</div>
-                    </div>
+                    <!-- 1. Header (Dark blue/black bar with smart gate theme) -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); padding: 32px 32px; border-top-left-radius: 16px; border-top-right-radius: 16px; position: relative;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <!-- Left Header Info -->
+                                    <td valign="middle">
+                                        <table border="0" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding-right: 14px;" valign="middle">
+                                                    <!-- Shield outline with a lock inside -->
+                                                    <div style="width: 46px; height: 46px; border-radius: 10px; background-color: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.25); display: flex; align-items: center; justify-content: center;">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: auto;">
+                                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                                            <rect x="9" y="11" width="6" height="5" rx="1" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                                                            <path d="M12 11V9a2 2 0 0 0-4 0v2" stroke="#3b82f6" stroke-width="1.5"/>
+                                                        </svg>
+                                                    </div>
+                                                </td>
+                                                <td valign="middle">
+                                                    <div style="font-size: 13px; font-weight: 700; color: #94A3B8; letter-spacing: 0.5px; text-transform: uppercase;">Secure Smart Gate</div>
+                                                    <div style="font-size: 26px; font-weight: 800; color: #10B981; margin-top: 2px; margin-bottom: 2px; letter-spacing: -0.5px;">ENTRY PASS</div>
+                                                    <div style="font-size: 11px; color: #94A3B8; font-weight: 500;">Your Secure Access. Our Priority.</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <!-- Right Badge -->
+                                    <td align="right" valign="top">
+                                        <table border="0" cellpadding="0" cellspacing="0" style="background-color: #10B981; border-radius: 30px; padding: 6px 14px; border: 1.5px solid rgba(255, 255, 255, 0.25);">
+                                            <tr>
+                                                <td style="padding-right: 6px;">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                                                        <polyline points="20 6 9 17 4 12"/>
+                                                    </svg>
+                                                </td>
+                                                <td style="font-size: 11px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;">Access Pass</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
                     
-                    <!-- Body -->
-                    <div style="display: flex; gap: 20px; align-items: center; flex: 1; margin-top: 15px; margin-bottom: 15px; width: 100%;">
-                        
-                        <!-- Photo placeholder -->
-                        <div style="width: 100px; height: 125px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); overflow: hidden; flex-shrink: 0;">
-                            <!-- Generic Profile Shield SVG -->
-                            <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
-                        </div>
-                        
-                        <!-- Info -->
-                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; height: 125px;">
-                            <div>
-                                <div style="font-size: 22px; font-weight: bold; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;">{first_name} {last_name}</div>
-                                
-                                <div style="display: flex; gap: 20px; margin-bottom: 10px;">
-                                    <div style="display: flex; flex-direction: column;">
-                                        <span style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">ID</span>
-                                        <span style="font-size: 13px; font-weight: 600; color: #f1f5f9;">{employee_id}</span>
-                                    </div>
-                                    <div style="display: flex; flex-direction: column;">
-                                        <span style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Dept</span>
-                                        <span style="font-size: 13px; font-weight: 600; color: #f1f5f9;">Visitor</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Valid Doors</span>
-                                <span style="font-size: 12px; font-weight: 600; color: #3b82f6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">{allowed_doors}</span>
-                            </div>
-                        </div>
-                        
-                        <!-- QR Code Box -->
-                        <div style="width: 115px; height: 115px; background: #ffffff; border-radius: 8px; padding: 8px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0;">
-                            <img src="cid:qr_image" alt="QR Code" style="width: 100%; height: 100%; display: block;" />
-                        </div>
-                    </div>
+                    <!-- 2. Welcome Section -->
+                    <tr>
+                        <td style="padding: 32px 32px 10px 32px; background-color: #FFFFFF;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td width="28" valign="middle" style="padding-right: 10px;">
+                                        <div style="width: 28px; height: 28px; border-radius: 50%; background-color: #3B82F6; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: auto;">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                                <circle cx="12" cy="7" r="4"/>
+                                            </svg>
+                                        </div>
+                                    </td>
+                                    <td valign="middle">
+                                        <div style="font-size: 18px; font-weight: 500; color: #1E293B;">Hello <strong style="color: #3B82F6;">{visitor_name}</strong>,</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-top: 14px; font-size: 14px; color: #475569; line-height: 1.6;">
+                                        A secure visitor access pass has been generated for you. When you arrive at the gate, please present the QR code below directly to the camera feed.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
                     
-                    <!-- Footer -->
-                    <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 10px; align-items: center; width: 100%;">
-                        <div style="display: flex; flex-direction: column;">
-                            <span style="font-size: 9px; text-transform: uppercase; color: #475569; letter-spacing: 0.5px;">Card Number</span>
-                            <span style="font-family: monospace; font-size: 10px; color: #94a3b8;">{token[:18]}...</span>
-                        </div>
-                        
-                        <div style="display: flex; gap: 15px; text-align: right;">
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 9px; text-transform: uppercase; color: #475569; letter-spacing: 0.5px;">Issued</span>
-                                <span style="font-weight: 500; font-size: 11px; color: #cbd5e1;">{issued_date}</span>
-                            </div>
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 9px; text-transform: uppercase; color: #475569; letter-spacing: 0.5px;">Expires</span>
-                                <span style="font-weight: 500; font-size: 11px; color: #cbd5e1;">{expiry_date}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <p style="font-size: 13px; color: #94a3b8; text-align: center; margin-top: 25px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                    This is your secure entry pass. When you arrive at the gate, present this QR code directly to the camera feed to unlock the door. Keep this pass secure and do not share it.
-                </p>
-            </div>
-        </body>
-        </html>
-        """
+                    <!-- 3 & 4. QR Pass Card & Pass Details (Two columns side-by-side) -->
+                    <tr>
+                        <td style="padding: 20px 32px; background-color: #FFFFFF;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <!-- Left Column: QR Pass Card -->
+                                    <td width="300" valign="top">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1.5px solid #E2E8F0; border-radius: 12px; height: 200px; padding: 16px; box-sizing: border-box; background-color: #FFFFFF;">
+                                            <tr>
+                                                <!-- Left Side: QR Image with blue scanbrackets border -->
+                                                <td width="120" align="center" valign="middle">
+                                                    <div style="border: 2px solid #3B82F6; padding: 6px; border-radius: 8px; background-color: #FFFFFF; display: inline-block;">
+                                                        <img src="cid:qr_image" alt="Access QR Code" style="width: 90px; height: 90px; display: block; border-radius: 4px;" />
+                                                    </div>
+                                                </td>
+                                                <!-- Right Side: QR Title & Token ID -->
+                                                <td valign="middle" style="padding-left: 14px;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                        <tr>
+                                                            <td valign="middle" style="padding-bottom: 4px;">
+                                                                <span style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B82F6" stroke="#3B82F6" stroke-width="2">
+                                                                        <polyline points="20 6 9 17 4 12"/>
+                                                                    </svg>
+                                                                </span>
+                                                                <span style="font-size: 11px; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; white-space: nowrap;">Your Access QR</span>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-size: 10px; color: #64748B; line-height: 1.4; padding-bottom: 8px;">
+                                                                Scan at the gate camera.
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F1F5F9; border-radius: 6px; padding: 6px 8px;">
+                                                                    <tr>
+                                                                        <td>
+                                                                            <div style="font-size: 8px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;"># Token ID</div>
+                                                                            <div style="font-family: monospace; font-size: 9px; font-weight: 600; color: #334155; word-break: break-all;">{token}</div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    
+                                    <td width="16" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+                                    
+                                    <!-- Right Column: Pass Information Details -->
+                                    <td width="308" valign="top">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 14px 16px; height: 200px; box-sizing: border-box; font-size: 12px; color: #475569; background-color: #FFFFFF;">
+                                            <!-- Gate -->
+                                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                                <td style="padding: 8px 0;" valign="middle">
+                                                    <span style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5">
+                                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                                            <path d="M9 3v18"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span style="font-size: 9px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;">Authorized Gate(s)</span>
+                                                </td>
+                                                <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1E293B;" valign="middle">{allowed_doors}</td>
+                                            </tr>
+                                            <!-- Validity -->
+                                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                                <td style="padding: 8px 0;" valign="middle">
+                                                    <span style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5">
+                                                            <circle cx="12" cy="12" r="10"/>
+                                                            <polyline points="12 6 12 12 16 14"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span style="font-size: 9px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;">Validity Ends</span>
+                                                </td>
+                                                <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #DC2626;" valign="middle">{expiration_date}</td>
+                                            </tr>
+                                            <!-- Issued -->
+                                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                                <td style="padding: 8px 0;" valign="middle">
+                                                    <span style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
+                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span style="font-size: 9px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;">Date Issued</span>
+                                                </td>
+                                                <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1E293B;" valign="middle">{issued_date}</td>
+                                            </tr>
+                                            <!-- Host -->
+                                            <tr style="border-bottom: 1px solid #F1F5F9;">
+                                                <td style="padding: 8px 0;" valign="middle">
+                                                    <span style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5">
+                                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                                            <circle cx="12" cy="7" r="4"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span style="font-size: 9px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;">Host</span>
+                                                </td>
+                                                <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1E293B;" valign="middle">N/A</td>
+                                            </tr>
+                                            <!-- Pass Type -->
+                                            <tr>
+                                                <td style="padding: 6px 0;" valign="middle">
+                                                    <span style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2.5">
+                                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span style="font-size: 9px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;">Pass Type</span>
+                                                </td>
+                                                <td style="padding: 6px 0; text-align: right;" valign="middle">
+                                                    <span style="font-size: 10px; font-weight: 700; color: #16A34A; background-color: rgba(22, 163, 74, 0.1); padding: 2px 8px; border-radius: 4px; border: 0.5px solid rgba(22, 163, 74, 0.2); text-transform: uppercase;">Visitor Pass</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- 5. Security Features Grid -->
+                    <tr>
+                        <td style="padding: 10px 32px; background-color: #FFFFFF;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 16px;">
+                                <tr>
+                                    <!-- Secure & Encrypted -->
+                                    <td width="25%" align="center" valign="top">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; background-color: rgba(37, 99, 235, 0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" style="display: block; margin: auto;">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 11px; font-weight: 700; color: #1E293B; margin-bottom: 2px;">Secure & Encrypted</div>
+                                        <div style="font-size: 9px; color: #64748B; padding: 0 4px; line-height: 1.3;">Your pass is encrypted and unique to you.</div>
+                                    </td>
+                                    <!-- Time Sensitive -->
+                                    <td width="25%" align="center" valign="top" style="border-left: 1px solid #E2E8F0;">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; background-color: rgba(22, 163, 74, 0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" style="display: block; margin: auto;">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 11px; font-weight: 700; color: #1E293B; margin-bottom: 2px;">Time Sensitive</div>
+                                        <div style="font-size: 9px; color: #64748B; padding: 0 4px; line-height: 1.3;">This pass is valid only until the time shown.</div>
+                                    </td>
+                                    <!-- Camera Verified -->
+                                    <td width="25%" align="center" valign="top" style="border-left: 1px solid #E2E8F0;">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; background-color: rgba(139, 92, 246, 0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2.5" style="display: block; margin: auto;">
+                                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                                <circle cx="12" cy="13" r="4"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 11px; font-weight: 700; color: #1E293B; margin-bottom: 2px;">Camera Verified</div>
+                                        <div style="font-size: 9px; color: #64748B; padding: 0 4px; line-height: 1.3;">Present the QR clearly to the camera.</div>
+                                    </td>
+                                    <!-- Do Not Share -->
+                                    <td width="25%" align="center" valign="top" style="border-left: 1px solid #E2E8F0;">
+                                        <div style="width: 32px; height: 32px; border-radius: 50%; background-color: rgba(245, 158, 11, 0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5" style="display: block; margin: auto;">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                            </svg>
+                                        </div>
+                                        <div style="font-size: 11px; font-weight: 700; color: #1E293B; margin-bottom: 2px;">Do Not Share</div>
+                                        <div style="font-size: 9px; color: #64748B; padding: 0 4px; line-height: 1.3;">This pass is for you only. Sharing is not allowed.</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- 6. Important Notice Banner -->
+                    <tr>
+                        <td style="padding: 10px 32px 32px 32px; background-color: #FFFFFF;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 12px; padding: 14px;">
+                                <tr>
+                                    <td width="24" valign="top">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5" style="display: block;">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            <line x1="12" y1="9" x2="12" y2="13"/>
+                                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                        </svg>
+                                    </td>
+                                    <td valign="top" style="padding-left: 10px; font-size: 12px; color: #B45309; line-height: 1.5;">
+                                        This pass is temporary. Keep it secure and do not forward it. If you lose it, contact the host to revoke it.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- 7. Footer -->
+                    <tr>
+                        <td style="background-color: #0F172A; padding: 32px 32px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <!-- Left Column: Branding info -->
+                                    <td valign="middle">
+                                        <table border="0" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding-right: 12px;" valign="middle">
+                                                    <!-- Shield outline with a lock inside -->
+                                                    <div style="width: 32px; height: 32px; border-radius: 6px; background-color: rgba(37, 99, 235, 0.15); display: flex; align-items: center; justify-content: center;">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: auto;">
+                                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                                            <rect x="9" y="11" width="6" height="5" rx="1" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                                                        </svg>
+                                                    </div>
+                                                </td>
+                                                <td valign="middle">
+                                                    <div style="font-size: 13px; font-weight: 700; color: #FFFFFF; letter-spacing: 0.5px; text-transform: uppercase;">SECURE SMART GATE</div>
+                                                    <div style="font-size: 10px; color: #94A3B8;">Smart Access. Safe Environment.</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    
+                                    <!-- Center Column: Need Help -->
+                                    <td style="padding-left: 20px; border-left: 1.5px solid #334155; font-size: 11px; color: #94A3B8; line-height: 1.4;">
+                                        <strong style="color: #FFFFFF; display: block; margin-bottom: 2px;">Need Help?</strong>
+                                        Contact your host or security team.
+                                    </td>
+                                    
+                                    <!-- Right Column: Security badges -->
+                                    <td align="right" valign="middle">
+                                        <table border="0" cellpadding="0" cellspacing="0" style="color: #94A3B8; font-size: 11px;">
+                                            <tr>
+                                                <td style="padding-right: 15px;">
+                                                    <span style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
+                                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                                            <polyline points="22 4 12 14.01 9 11.01"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span style="color: #FFFFFF; font-weight: 500; vertical-align: middle;">Safe</span>
+                                                </td>
+                                                <td>
+                                                    <span style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5">
+                                                            <circle cx="12" cy="12" r="10"/>
+                                                            <polyline points="12 6 12 12 16 14"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span style="color: #FFFFFF; font-weight: 500; vertical-align: middle;">Reliable</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Bottom Notice Text -->
+                    <tr>
+                        <td align="center" style="padding-top: 20px; font-size: 11px; color: #64748B; line-height: 1.4; text-align: center;">
+                            This is an automated message. Please do not reply to this email. &nbsp;|&nbsp; &copy; 2026 Secure Smart Gate System. All rights reserved.
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
 
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
