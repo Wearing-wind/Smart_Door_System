@@ -12,9 +12,9 @@ dlib>=19.22.0
 # Web framework
 Flask>=2.0.0
 bcrypt>=4.0.0
-qrcode>=7.3.0
-cryptography>=3.4.0
-requests>=2.25.0
+
+# SMS Notifications
+twilio>=8.0.0
 
 # Database
 # SQLite is included with Python
