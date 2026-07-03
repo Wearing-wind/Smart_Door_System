@@ -13,7 +13,10 @@ import threading
 import time
 import cv2
 import numpy as np
-import face_recognition
+try:
+    import face_recognition
+except ImportError:
+    face_recognition = None
 from PIL import Image, ImageTk
 import logging
 from pathlib import Path
@@ -374,11 +377,14 @@ Instructions:
                 # position themselves before clicking Enroll.
                 # This path is safe because the enrollment thread is idle.
                 self._preview_frame_count += 1
-                if self._preview_frame_count % 5 == 0:
+                if self._preview_frame_count % 10 == 0:
                     small = cv2.resize(frame_rgb, (0, 0), fx=0.25, fy=0.25)
-                    locations = face_recognition.face_locations(
-                        small, model=FACE_DETECTION_MODEL
-                    )
+                    if face_recognition is not None:
+                        locations = face_recognition.face_locations(
+                            small, model=FACE_DETECTION_MODEL
+                        )
+                    else:
+                        locations = []
                     self.face_locations_preview = [
                         (t * 4, r * 4, b * 4, l * 4) for (t, r, b, l) in locations
                     ]
@@ -447,6 +453,15 @@ Instructions:
     
     def enroll_face_only(self):
         """Start face enrollment."""
+        if face_recognition is None:
+            messagebox.showerror(
+                "Face Recognition Unavailable",
+                "The face_recognition library is not installed.\n\n"
+                "To install it on Windows with Python 3.14, you must first install the "
+                "Visual Studio C++ Build Tools. Face enrollment cannot proceed without it."
+            )
+            return
+
         if not self.validate_selection():
             return
         
