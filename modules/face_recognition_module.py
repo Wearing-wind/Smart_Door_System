@@ -8,7 +8,57 @@ import numpy as np
 try:
     import face_recognition
 except ImportError:
-    face_recognition = None
+    # OpenCV 5.0 deep learning fallback for face_recognition API
+    class _FaceRecognitionFallback:
+        def __init__(self):
+            import os
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            yunet_path = os.path.join(base_dir, "yunet.onnx")
+            sface_path = os.path.join(base_dir, "sface.onnx")
+            
+            # Use YuNet for detection and SFace for recognition
+            self.detector = cv2.FaceDetectorYN_create(yunet_path, "", (320, 320))
+            self.recognizer = cv2.FaceRecognizerSF_create(sface_path, "")
+            
+        def face_locations(self, img, model="hog"):
+            height, width, _ = img.shape
+            self.detector.setInputSize((width, height))
+            _, faces = self.detector.detect(img)
+            locations = []
+            if faces is not None:
+                for face in faces:
+                    x, y, w, h = map(int, face[:4])
+                    locations.append((y, x+w, y+h, x))
+            return locations
+            
+        def face_encodings(self, img, known_face_locations=None, num_jitters=1, model="small"):
+            height, width, _ = img.shape
+            self.detector.setInputSize((width, height))
+            _, faces = self.detector.detect(img)
+            encodings = []
+            if faces is not None:
+                for face in faces:
+                    if known_face_locations is not None:
+                        x, y, w, h = map(int, face[:4])
+                        top, right, bottom, left = y, x+w, y+h, x
+                        matched = False
+                        for (k_top, k_right, k_bottom, k_left) in known_face_locations:
+                            if k_left < right and k_right > left and k_top < bottom and k_bottom > top:
+                                matched = True
+                                break
+                        if not matched:
+                            continue
+                    face_align = self.recognizer.alignCrop(img, face)
+                    feature = self.recognizer.feature(face_align)
+                    encodings.append(feature[0].flatten())
+            return encodings
+            
+        def face_distance(self, face_encodings, face_to_compare):
+            if len(face_encodings) == 0:
+                return np.empty((0,))
+            return np.linalg.norm(np.array(face_encodings) - face_to_compare, axis=1)
+
+    face_recognition = _FaceRecognitionFallback()
 import threading
 import logging
 from typing import Optional, Tuple, List, Dict, Any, Union
