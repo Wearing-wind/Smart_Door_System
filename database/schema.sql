@@ -26,6 +26,11 @@ CREATE TABLE IF NOT EXISTS users (
     designation VARCHAR(100),
     is_active BOOLEAN DEFAULT 1,
     face_enrolled BOOLEAN DEFAULT 0,
+    user_type VARCHAR(50) DEFAULT 'Employee',
+    access_level VARCHAR(50) DEFAULT 'Normal',
+    allowed_doors TEXT DEFAULT 'Main Entrance',
+    status VARCHAR(20) DEFAULT 'Active',
+    expiration_date DATETIME NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER,
@@ -59,8 +64,37 @@ CREATE TABLE IF NOT EXISTS access_logs (
     failure_reason VARCHAR(255),
     confidence_score FLOAT,
     ip_address VARCHAR(45),
+    qr_token VARCHAR(255) NULL,
+    door VARCHAR(100) DEFAULT 'Main Entrance',
+    camera VARCHAR(100) NULL,
+    reason VARCHAR(255) NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- QR Passes table - stores secure QR tokens linked to users
+CREATE TABLE IF NOT EXISTS qr_passes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    qr_token VARCHAR(255) UNIQUE NOT NULL,
+    status VARCHAR(20) DEFAULT 'Active', -- 'Active', 'Disabled', 'Expired', 'Revoked', 'Lost', 'Replaced'
+    issue_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expiration_date DATETIME NULL,
+    access_level VARCHAR(50) DEFAULT 'Normal',
+    allowed_doors TEXT DEFAULT 'Main Entrance',
+    access_schedule TEXT, -- JSON schedule, e.g. {"days": [1,2,3,4,5], "start_time": "09:00", "end_time": "18:00"}
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- System settings table - stores encrypted credentials and configs
+CREATE TABLE IF NOT EXISTS system_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value TEXT,
+    is_encrypted BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- System logs table - for system events and errors
@@ -93,6 +127,8 @@ CREATE INDEX IF NOT EXISTS idx_access_logs_date ON access_logs(access_date);
 CREATE INDEX IF NOT EXISTS idx_access_logs_result ON access_logs(result);
 CREATE INDEX IF NOT EXISTS idx_system_logs_level ON system_logs(log_level);
 CREATE INDEX IF NOT EXISTS idx_system_logs_module ON system_logs(module);
+CREATE INDEX IF NOT EXISTS idx_qr_passes_token ON qr_passes(qr_token);
+CREATE INDEX IF NOT EXISTS idx_qr_passes_user ON qr_passes(user_id);
 
 -- Insert default admin user (password: admin12)
 -- Password hash generated using bcrypt for password "admin12"

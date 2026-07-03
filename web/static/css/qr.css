@@ -1,0 +1,350 @@
+/* QR Visitor Management System - SaaS style stylesheet */
+
+:root {
+    --glass-bg: rgba(30, 41, 59, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: rgba(0, 0, 0, 0.3);
+    --card-glow: rgba(59, 130, 246, 0.15);
+}
+
+/* Glassmorphism Card style */
+.qr-glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px 0 var(--glass-shadow);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.qr-glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4), 0 0 15px var(--card-glow);
+}
+
+/* Dashboard Statistics Widgets Grid */
+.qr-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.qr-stat-card {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid var(--glass-border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s;
+}
+
+.qr-stat-card:hover {
+    transform: scale(1.02);
+}
+
+.qr-stat-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.qr-stat-icon.bg-primary { background-color: rgba(59, 130, 246, 0.25); color: #3b82f6; }
+.qr-stat-icon.bg-success { background-color: rgba(34, 197, 94, 0.25); color: #22c55e; }
+.qr-stat-icon.bg-info { background-color: rgba(6, 182, 212, 0.25); color: #06b6d4; }
+.qr-stat-icon.bg-warning { background-color: rgba(245, 158, 11, 0.25); color: #f59e0b; }
+.qr-stat-icon.bg-danger { background-color: rgba(239, 68, 68, 0.25); color: #ef4444; }
+
+.qr-stat-info h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.qr-stat-info p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Door Scanner Camera Feed Display */
+.qr-camera-container {
+    position: relative;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4/3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.qr-camera-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.qr-camera-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qr-camera-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.5; }
+}
+
+/* Printable ID Card CSS */
+@media screen {
+    .qr-print-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 70vh;
+        background: rgba(15, 23, 42, 0.1);
+        padding: 2rem;
+    }
+    
+    .id-card-pvc {
+        width: 85.6mm;
+        height: 53.98mm;
+        border-radius: 3.18mm;
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        color: #fff;
+        padding: 4mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        font-family: 'Inter', sans-serif;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+}
+
+/* Print Specific Rules */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .qr-print-wrapper, .id-card-pvc, .id-card-pvc * {
+        visibility: visible;
+    }
+    .qr-print-wrapper {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: none;
+        padding: 0;
+    }
+    .id-card-pvc {
+        width: 85.6mm;
+        height: 53.98mm;
+        border-radius: 3.18mm;
+        background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color: #fff !important;
+        padding: 4mm;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    .btn-print-action {
+        display: none !important;
+    }
+}
+
+/* Inner ID Card styling */
+.id-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 0.5px solid rgba(255,255,255,0.15);
+    padding-bottom: 1.5mm;
+}
+
+.id-card-logo {
+    display: flex;
+    align-items: center;
+    gap: 1.5mm;
+    font-size: 3.5mm;
+    font-weight: 700;
+    color: #3b82f6;
+}
+
+.id-card-badge {
+    font-size: 2.2mm;
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    padding: 0.5mm 2mm;
+    border-radius: 1mm;
+    border: 0.2px solid rgba(96, 165, 250, 0.3);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.id-card-body {
+    display: flex;
+    gap: 4mm;
+    flex: 1;
+    margin-top: 2.5mm;
+    margin-bottom: 2.5mm;
+}
+
+.id-card-photo-box {
+    width: 18mm;
+    height: 22mm;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 1.5mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.05);
+    overflow: hidden;
+}
+
+.id-card-photo-box i {
+    font-size: 8mm;
+    color: rgba(255,255,255,0.3);
+}
+
+.id-card-info-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.id-card-name {
+    font-size: 4.2mm;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.5mm;
+}
+
+.id-card-detail-row {
+    display: flex;
+    gap: 3mm;
+}
+
+.id-card-detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.id-card-label {
+    font-size: 1.8mm;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
+.id-card-value {
+    font-size: 2.5mm;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.id-card-qr-box {
+    width: 20mm;
+    height: 20mm;
+    background: #fff;
+    border-radius: 1.5mm;
+    padding: 1.5mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.id-card-qr-image {
+    width: 100%;
+    height: 100%;
+}
+
+.id-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 0.5px solid rgba(255,255,255,0.1);
+    padding-top: 1.5mm;
+    font-size: 1.8mm;
+    color: #64748b;
+}
+
+/* Forms styling */
+.qr-form-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .qr-form-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+.qr-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 0.5rem;
+}
+
+.qr-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.qr-checkbox-item input {
+    cursor: pointer;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+/* Status Badges */
+.badge-revoked { background-color: #7f1d1d; color: #fca5a5; }
+.badge-replaced { background-color: #7c2d12; color: #fdba74; }
+.badge-lost { background-color: #78350f; color: #fde047; }
+.badge-expired { background-color: #334155; color: #cbd5e1; }

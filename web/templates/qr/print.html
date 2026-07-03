@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print QR Pass - {{ card.first_name }} {{ card.last_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/qr.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .btn-print-action {
+            background-color: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: background-color 0.2s;
+        }
+        .btn-print-action:hover {
+            background-color: #2563eb;
+        }
+        .instructions {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-top: 1.5rem;
+            text-align: center;
+            max-width: 320px;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="btn-print-action" onclick="window.print()">
+        <i class="fas fa-print"></i> Print ID Card
+    </button>
+
+    <div class="qr-print-wrapper">
+        <!-- PVC CARD (CR80 standard size) -->
+        <div class="id-card-pvc">
+            <div class="id-card-header">
+                <div class="id-card-logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SMART GATE</span>
+                </div>
+                <div class="id-card-badge">{{ card.access_level }}</div>
+            </div>
+            
+            <div class="id-card-body">
+                <!-- Profile Image / Fallback -->
+                <div class="id-card-photo-box">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                
+                <div class="id-card-info-box">
+                    <div>
+                        <div class="id-card-name">{{ card.first_name }} {{ card.last_name }}</div>
+                        <div class="id-card-detail-row" style="margin-bottom: 1.5mm;">
+                            <div class="id-card-detail-item">
+                                <span class="id-card-label">ID</span>
+                                <span class="id-card-value">{{ card.employee_id }}</span>
+                            </div>
+                            <div class="id-card-detail-item">
+                                <span class="id-card-label">Dept</span>
+                                <span class="id-card-value">{{ card.department or 'Visitor' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="id-card-detail-row">
+                        <div class="id-card-detail-item">
+                            <span class="id-card-label">Valid Doors</span>
+                            <span class="id-card-value" style="font-size: 2.2mm; max-width: 32mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ card.allowed_doors }}">{{ card.allowed_doors }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- QR Code Box -->
+                <div class="id-card-qr-box">
+                    <img class="id-card-qr-image" src="{{ qr_image }}" alt="QR Code">
+                </div>
+            </div>
+            
+            <div class="id-card-footer">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 1.3mm; text-transform: uppercase; color: #475569;">Card Number</span>
+                    <span style="font-family: monospace; font-size: 1.8mm; color: #94a3b8;">{{ card.qr_token[:18] }}...</span>
+                </div>
+                
+                <div style="display: flex; gap: 3mm; text-align: right;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 1.3mm; text-transform: uppercase; color: #475569;">Issued</span>
+                        <span style="font-weight: 500; font-size: 1.8mm; color: #cbd5e1;">{{ card.created_at.split(' ')[0] }}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 1.3mm; text-transform: uppercase; color: #475569;">Expires</span>
+                        <span style="font-weight: 500; font-size: 1.8mm; color: #cbd5e1;">
+                            {% if card.expiration_date %}
+                                {{ card.expiration_date.split(' ')[0] }}
+                            {% else %}
+                                Lifetime
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <i class="fas fa-info-circle"></i>
+        <span>This preview matches Standard CR80 PVC sizes (85.6mm x 53.98mm). When printing, disable headers/footers in the browser print dialog and set margins to "None".</span>
+    </div>
+
+</body>
+</html>

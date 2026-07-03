@@ -47,6 +47,10 @@ face_repo = FaceEncodingRepository()
 access_log_repo = AccessLogRepository()
 system_log = SystemLogRepository()
 
+# Register QR Blueprint
+from web.routes.qr_routes import qr_bp
+app.register_blueprint(qr_bp)
+
 
 # =====================
 # Authentication Helpers
@@ -242,6 +246,22 @@ def add_user():
             department = request.form.get('department', '').strip() or None
             designation = request.form.get('designation', '').strip() or None
             
+            # New QR/Visitor Fields
+            user_type = request.form.get('user_type', 'Employee').strip()
+            access_level = request.form.get('access_level', 'Normal').strip()
+            allowed_doors = request.form.getlist('allowed_doors')
+            allowed_doors_str = ",".join(allowed_doors) if allowed_doors else "Main Entrance"
+            status = request.form.get('status', 'Active').strip()
+            
+            exp_date_raw = request.form.get('expiration_date', '').strip()
+            expiration_date = None
+            if exp_date_raw:
+                try:
+                    datetime.strptime(exp_date_raw, '%Y-%m-%d')
+                    expiration_date = f"{exp_date_raw} 23:59:59"
+                except ValueError:
+                    pass
+            
             if not employee_id or not first_name or not last_name:
                 flash('Employee ID, First Name, and Last Name are required.', 'error')
                 return render_template('user_form.html', user=None, action='add')
@@ -259,13 +279,24 @@ def add_user():
                 phone=phone,
                 department=department,
                 designation=designation,
-                created_by=session['admin_id']
+                created_by=session['admin_id'],
+                user_type=user_type,
+                access_level=access_level,
+                allowed_doors=allowed_doors_str,
+                status=status,
+                expiration_date=expiration_date
             )
             
             system_log.info('UserManagement', 
                           f"User created: {first_name} {last_name} ({employee_id})")
             
-            flash(f'User {first_name} {last_name} created successfully.', 'success')
+            # Auto-generate a QR Pass for this user immediately if active
+            if status == 'Active':
+                from modules.qr_manager import QRManager
+                qm = QRManager()
+                qm.create_pass_for_user(user_id=user_id, duration_days=365) # default 1 year
+            
+            flash(f'User {first_name} {last_name} created successfully. QR Pass generated.', 'success')
             return redirect(url_for('users'))
             
         except Exception as e:
@@ -285,6 +316,22 @@ def edit_user(user_id):
     
     if request.method == 'POST':
         try:
+            # New QR/Visitor Fields
+            user_type = request.form.get('user_type', 'Employee').strip()
+            access_level = request.form.get('access_level', 'Normal').strip()
+            allowed_doors = request.form.getlist('allowed_doors')
+            allowed_doors_str = ",".join(allowed_doors) if allowed_doors else "Main Entrance"
+            status = request.form.get('status', 'Active').strip()
+            
+            exp_date_raw = request.form.get('expiration_date', '').strip()
+            expiration_date = None
+            if exp_date_raw:
+                try:
+                    datetime.strptime(exp_date_raw, '%Y-%m-%d')
+                    expiration_date = f"{exp_date_raw} 23:59:59"
+                except ValueError:
+                    pass
+
             user_repo.update(
                 user_id=user_id,
                 first_name=request.form.get('first_name', '').strip(),
@@ -292,9 +339,22 @@ def edit_user(user_id):
                 email=request.form.get('email', '').strip() or None,
                 phone=request.form.get('phone', '').strip() or None,
                 department=request.form.get('department', '').strip() or None,
-                designation=request.form.get('designation', '').strip() or None
+                designation=request.form.get('designation', '').strip() or None,
+                user_type=user_type,
+                access_level=access_level,
+                allowed_doors=allowed_doors_str,
+                status=status,
+                expiration_date=expiration_date
             )
             
+            # If status changed, synchronize active passes
+            is_now_active = (status == 'Active')
+            if not is_now_active:
+                # Deactivate their QR passes
+                from modules.qr_manager import QRManager
+                qm = QRManager()
+                qm.deactivate_user_passes(user_id)
+                
             system_log.info('UserManagement', f"User updated: {user['employee_id']}")
             
             flash('User updated successfully.', 'success')
@@ -497,6 +557,10 @@ def settings():
                 (email, full_name, datetime.now(), admin_id)
             )
             admin_repo.db.commit()
+            
+            # Save receiver email dynamically in global system settings
+            from modules.access_controller import AccessController
+            AccessController().set_setting("alert_receiver_email", email)
             
             # Update session
             session['admin_name'] = full_name

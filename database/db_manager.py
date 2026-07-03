@@ -73,7 +73,37 @@ class DatabaseManager:
             conn = self._get_connection()
             conn.executescript(schema)
             conn.commit()
-            logger.info("Database initialized successfully")
+            
+            # Check and run migrations for users
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(users)")
+            columns = [row[1] for row in cursor.fetchall()]
+            
+            if 'user_type' not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN user_type VARCHAR(50) DEFAULT 'Employee'")
+            if 'access_level' not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN access_level VARCHAR(50) DEFAULT 'Normal'")
+            if 'allowed_doors' not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN allowed_doors TEXT DEFAULT 'Main Entrance'")
+            if 'status' not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'Active'")
+            if 'expiration_date' not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN expiration_date DATETIME NULL")
+                
+            # Check and run migrations for access_logs
+            cursor.execute("PRAGMA table_info(access_logs)")
+            log_columns = [row[1] for row in cursor.fetchall()]
+            if 'qr_token' not in log_columns:
+                conn.execute("ALTER TABLE access_logs ADD COLUMN qr_token VARCHAR(255) NULL")
+            if 'door' not in log_columns:
+                conn.execute("ALTER TABLE access_logs ADD COLUMN door VARCHAR(100) DEFAULT 'Main Entrance'")
+            if 'camera' not in log_columns:
+                conn.execute("ALTER TABLE access_logs ADD COLUMN camera VARCHAR(100) NULL")
+            if 'reason' not in log_columns:
+                conn.execute("ALTER TABLE access_logs ADD COLUMN reason VARCHAR(255) NULL")
+                
+            conn.commit()
+            logger.info("Database initialized and migrated successfully")
         else:
             logger.error(f"Schema file not found: {schema_path}")
     
@@ -179,13 +209,18 @@ class UserRepository:
     
     def create(self, employee_id: str, first_name: str, last_name: str,
                email: str = None, phone: str = None, department: str = None,
-               designation: str = None, created_by: int = None) -> int:
+               designation: str = None, created_by: int = None,
+               user_type: str = 'Employee', access_level: str = 'Normal',
+               allowed_doors: str = 'Main Entrance', status: str = 'Active',
+               expiration_date: str = None) -> int:
         """Create a new user."""
         cursor = self.db.execute(
             """INSERT INTO users (employee_id, first_name, last_name, email, phone, 
-                                  department, designation, created_by)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (employee_id, first_name, last_name, email, phone, department, designation, created_by)
+                                  department, designation, created_by,
+                                  user_type, access_level, allowed_doors, status, expiration_date)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (employee_id, first_name, last_name, email, phone, department, designation, created_by,
+             user_type, access_level, allowed_doors, status, expiration_date)
         )
         self.db.commit()
         return cursor.lastrowid
@@ -230,7 +265,8 @@ class UserRepository:
         
         allowed_fields = ['first_name', 'last_name', 'email', 'phone', 
                           'department', 'designation', 'is_active',
-                          'face_enrolled']
+                          'face_enrolled', 'user_type', 'access_level',
+                          'allowed_doors', 'status', 'expiration_date']
         
         updates = []
         values = []
@@ -360,7 +396,8 @@ class AccessLogRepository:
     
     def log_access(self, user_id: Optional[int], event_type: str, result: str,
                    face_match: bool = False, failure_reason: str = None, confidence_score: float = None,
-                   ip_address: str = None) -> int:
+                   ip_address: str = None, qr_token: str = None, door: str = 'Main Entrance',
+                   camera: str = None, reason: str = None) -> int:
         """Log an access attempt."""
         now = datetime.now()
         
@@ -377,10 +414,12 @@ class AccessLogRepository:
         cursor = self.db.execute(
             """INSERT INTO access_logs
                (user_id, employee_id, user_name, event_type, access_date, access_time,
-                result, face_match, failure_reason, confidence_score, ip_address)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                result, face_match, failure_reason, confidence_score, ip_address,
+                qr_token, door, camera, reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (user_id, employee_id, user_name, event_type, now.date(), now.strftime('%H:%M:%S'),
-             result, face_match, failure_reason, confidence_score, ip_address)
+             result, face_match, failure_reason, confidence_score, ip_address,
+             qr_token, door, camera, reason)
         )
         self.db.commit()
         return cursor.lastrowid

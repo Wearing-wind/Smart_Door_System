@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Usage Reports - Smart Door Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/qr.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-chart-line"></i> Security Activity Reports</h1>
+    <a href="{{ url_for('qr.export_csv', type=report_type, start_date=start_date, end_date=end_date) }}" class="btn btn-primary">
+        <i class="fas fa-file-csv"></i> Export CSV
+    </a>
+</div>
+
+<!-- Report Selection Toolbar -->
+<div class="qr-glass-card" style="padding: 1rem;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('qr.reports', type='daily', start_date=start_date, end_date=end_date) }}" 
+           class="btn btn-sm {% if report_type == 'daily' %}btn-primary{% else %}btn-secondary{% endif %}">
+           <i class="fas fa-calendar-day"></i> Daily Log
+        </a>
+        <a href="{{ url_for('qr.reports', type='weekly', start_date=start_date, end_date=end_date) }}" 
+           class="btn btn-sm {% if report_type == 'weekly' %}btn-primary{% else %}btn-secondary{% endif %}">
+           <i class="fas fa-calendar-week"></i> Weekly Log
+        </a>
+        <a href="{{ url_for('qr.reports', type='monthly', start_date=start_date, end_date=end_date) }}" 
+           class="btn btn-sm {% if report_type == 'monthly' %}btn-primary{% else %}btn-secondary{% endif %}">
+           <i class="fas fa-calendar-alt"></i> Monthly Log
+        </a>
+        <a href="{{ url_for('qr.reports', type='user', start_date=start_date, end_date=end_date) }}" 
+           class="btn btn-sm {% if report_type == 'user' %}btn-primary{% else %}btn-secondary{% endif %}">
+           <i class="fas fa-user-shield"></i> User Activity
+        </a>
+        <a href="{{ url_for('qr.reports', type='door', start_date=start_date, end_date=end_date) }}" 
+           class="btn btn-sm {% if report_type == 'door' %}btn-primary{% else %}btn-secondary{% endif %}">
+           <i class="fas fa-door-open"></i> Door Usage
+        </a>
+        <a href="{{ url_for('qr.reports', type='failed', start_date=start_date, end_date=end_date) }}" 
+           class="btn btn-sm {% if report_type == 'failed' %}btn-primary{% else %}btn-secondary{% endif %}">
+           <i class="fas fa-ban"></i> Failed Scans
+        </a>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="qr-glass-card">
+    <form method="GET" class="filter-form">
+        <!-- Preserve report type -->
+        <input type="hidden" name="type" value="{{ report_type }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="start_date">Start Date</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end; margin-bottom: 0;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Query Report
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Report Table -->
+<div class="qr-glass-card">
+    <div class="table-responsive">
+        {% if data %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        {% if report_type == 'daily' %}
+                            <th>Access Date</th>
+                            <th>Total Attempts</th>
+                            <th>Successful entries</th>
+                            <th>Failed / Denied</th>
+                        {% elif report_type == 'weekly' %}
+                            <th>Week Number</th>
+                            <th>Week Start Date</th>
+                            <th>Total Attempts</th>
+                            <th>Successful entries</th>
+                            <th>Failed / Denied</th>
+                        {% elif report_type == 'monthly' %}
+                            <th>Month / Year</th>
+                            <th>Total Attempts</th>
+                            <th>Successful entries</th>
+                            <th>Failed / Denied</th>
+                        {% elif report_type == 'user' %}
+                            <th>Employee ID</th>
+                            <th>User Name</th>
+                            <th>Category</th>
+                            <th>Total Attempts</th>
+                            <th>Successful entries</th>
+                            <th>Failed / Denied</th>
+                        {% elif report_type == 'door' %}
+                            <th>Door Name</th>
+                            <th>Total Attempts</th>
+                            <th>Successful entries</th>
+                            <th>Failed / Denied</th>
+                        {% elif report_type == 'failed' %}
+                            <th>Date & Time</th>
+                            <th>Employee ID</th>
+                            <th>User Name</th>
+                            <th>Door</th>
+                            <th>Presented Token</th>
+                            <th>Reason</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        {% if report_type == 'daily' %}
+                            <td><strong>{{ row.access_date }}</strong></td>
+                            <td>{{ row.total_attempts }}</td>
+                            <td><span class="text-success">{{ row.successful }}</span></td>
+                            <td><span class="text-danger">{{ row.failed }}</span></td>
+                        {% elif report_type == 'weekly' %}
+                            <td>Week {{ row.week_num }}</td>
+                            <td>{{ row.week_start }}</td>
+                            <td>{{ row.total_attempts }}</td>
+                            <td><span class="text-success">{{ row.successful }}</span></td>
+                            <td><span class="text-danger">{{ row.failed }}</span></td>
+                        {% elif report_type == 'monthly' %}
+                            <td><strong>{{ row.month_year }}</strong></td>
+                            <td>{{ row.total_attempts }}</td>
+                            <td><span class="text-success">{{ row.successful }}</span></td>
+                            <td><span class="text-danger">{{ row.failed }}</span></td>
+                        {% elif report_type == 'user' %}
+                            <td><code>{{ row.employee_id }}</code></td>
+                            <td><strong>{{ row.user_name }}</strong></td>
+                            <td><span class="badge badge-secondary">{{ row.user_type }}</span></td>
+                            <td>{{ row.total_attempts }}</td>
+                            <td><span class="text-success">{{ row.successful }}</span></td>
+                            <td><span class="text-danger">{{ row.failed }}</span></td>
+                        {% elif report_type == 'door' %}
+                            <td><strong>{{ row.door }}</strong></td>
+                            <td>{{ row.total_attempts }}</td>
+                            <td><span class="text-success">{{ row.successful }}</span></td>
+                            <td><span class="text-danger">{{ row.failed }}</span></td>
+                        {% elif report_type == 'failed' %}
+                            <td>{{ row.access_date }} {{ row.access_time }}</td>
+                            <td><code>{{ row.employee_id or 'Unknown' }}</code></td>
+                            <td><strong>{{ row.user_name or 'Unknown Scan' }}</strong></td>
+                            <td>{{ row.door }}</td>
+                            <td><small><code>{{ row.qr_token }}</code></small></td>
+                            <td><span class="text-danger">{{ row.failure_reason or row.reason }}</span></td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <h3>No Logs Found</h3>
+                <p>No activity log entries matched the selected timeframe.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -2,13 +2,20 @@
 Smart Door Security System - Modules Package
 """
 
-from modules.face_recognition_module import (
-    FaceRecognitionEngine,
-    FaceEnrollment,
-    FaceResult,
-    FaceStatus,
-    CameraManager
-)
+try:
+    from modules.face_recognition_module import (
+        FaceRecognitionEngine,
+        FaceEnrollment,
+        FaceResult,
+        FaceStatus,
+        CameraManager
+    )
+except ImportError:
+    FaceRecognitionEngine = None
+    FaceEnrollment = None
+    FaceResult = None
+    FaceStatus = None
+    CameraManager = None
 
 from modules.door_control import (
     DoorController,

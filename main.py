@@ -41,6 +41,9 @@ from database.db_manager import (
     DatabaseManager, UserRepository,
     AccessLogRepository, SystemLogRepository,
 )
+from modules.qr_scanner import (
+    QRScannerEngine, QRResult, QRStatus,
+)
 from modules.face_recognition_module import (
     FaceRecognitionEngine, FaceResult, FaceStatus,
 )
@@ -91,6 +94,7 @@ class SmartDoorGUI:
         self.access_log_repo  = AccessLogRepository()
         self.system_log       = SystemLogRepository()
 
+        self.qr_scanner         = QRScannerEngine()
         self.face_engine        = FaceRecognitionEngine()
         self.door_controller    = DoorController(simulation=simulation)
         self.door_monitor       = DoorMonitor(self.door_controller)
@@ -100,9 +104,11 @@ class SmartDoorGUI:
         _sensor_monitor = self.door_controller._ultrasonic
 
         self._running         = False
+        self._face_enabled    = False
+        self._current_qr_result : Optional[QRResult]             = None
         self._current_face_result : Optional[FaceResult]         = None
         self._auth_state          = AuthState.IDLE
-        self._matched_face_user_id          = None
+        self._matched_qr_user_id            = None
         self._auth_start_time               = None
         self._proximity_distance_cm: float   = -1.0
         self._proximity_status              = "Sensor idle"
@@ -183,7 +189,7 @@ class SmartDoorGUI:
         face_status_frame = tk.Frame(camera_frame, bg="#16213e")
         face_status_frame.pack(fill=tk.X)
         tk.Label(
-            face_status_frame, text="Face Status: ",
+            face_status_frame, text="Scanner Status: ",
             font=("Helvetica", 11),
             fg="#ffffff", bg="#16213e",
         ).pack(side=tk.LEFT)
@@ -365,13 +371,24 @@ class SmartDoorGUI:
 
     def _start_systems(self):
         try:
-            # Camera / face recognition
-            if self.face_engine.start():
+            # Camera / QR scanner
+            if self.qr_scanner.start():
                 self.face_status_var.set("Camera Ready")
-                self._log_activity("Face recognition system started")
+                self._log_activity("QR Pass scanner system started")
             else:
                 self.face_status_var.set("Camera Error")
-                self._log_activity("ERROR: Face recognition failed to start")
+                self._log_activity("ERROR: QR Pass scanner failed to start")
+
+            # Try to start face recognition (if library is available)
+            self._face_enabled = False
+            try:
+                if self.face_engine.start():
+                    self._face_enabled = True
+                    self._log_activity("Face recognition module loaded (Hybrid Mode Active)")
+                else:
+                    self._log_activity("Face recognition bypassed: library unavailable or camera issue")
+            except Exception as e:
+                self._log_activity(f"Face recognition bypassed: {e}")
 
             # Door door + ultrasonic are both inside DoorController.__init__
             self.door_controller.add_state_callback(self._on_door_status_change)
@@ -397,13 +414,119 @@ class SmartDoorGUI:
         if not self._running:
             return
         try:
-            face_result = self.face_engine.process_frame()
-            self._update_face_display(face_result)
-            self._process_authentication(face_result)
+            # 1. Scan for QR code
+            qr_result = self.qr_scanner.process_frame()
+            
+            # If QR is detected, process QR authentication
+            if qr_result.status in (QRStatus.ACCESS_GRANTED, QRStatus.ACCESS_DENIED, QRStatus.QR_DETECTED, QRStatus.VALIDATING):
+                self._update_qr_display(qr_result)
+                self._process_qr_authentication(qr_result)
+            else:
+                # 2. No QR detected, try Face Recognition if enabled
+                if self._face_enabled:
+                    face_result = self.face_engine.process_frame()
+                    self._update_face_display(face_result)
+                    self._process_face_authentication(face_result)
+                else:
+                    # Default: display QR scanner idle frame
+                    self._update_qr_display(qr_result)
+                    self._process_qr_authentication(qr_result)
+            
             self._update_sensor_display()
         except Exception as exc:
             logger.error("Process loop error: %s", exc)
         self.root.after(GUI_UPDATE_INTERVAL, self._process_loop)
+
+    def _update_qr_display(self, qr_result: QRResult):
+        if qr_result.frame is not None:
+            frame = cv2.cvtColor(qr_result.frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.resize(frame, (640, 480))
+            img   = Image.fromarray(frame)
+            self.camera_image = ImageTk.PhotoImage(image=img)
+            self.camera_canvas.create_image(0, 0, anchor=tk.NW, image=self.camera_image)
+
+        status_text = qr_result.status.value
+        if qr_result.status == QRStatus.ACCESS_GRANTED:
+            self.face_status_label.config(fg="#00ff88")
+        elif qr_result.status == QRStatus.ACCESS_DENIED:
+            self.face_status_label.config(fg="#ff4444")
+        elif qr_result.status in (QRStatus.QR_DETECTED, QRStatus.VALIDATING):
+            self.face_status_label.config(fg="#ffcc00")
+        else:
+            self.face_status_label.config(fg="#888888")
+        self.face_status_var.set(status_text)
+
+    def _process_qr_authentication(self, qr_result: QRResult):
+        if self._auth_state in (AuthState.ACCESS_GRANTED,
+                                AuthState.ACCESS_DENIED,
+                                AuthState.TIMEOUT):
+            if time.time() - self._auth_start_time > 4:
+                self._reset_auth_state()
+            return
+
+        if self.door_controller.is_unlocked():
+            return
+
+        if self._auth_state == AuthState.IDLE:
+            if qr_result.status == QRStatus.ACCESS_GRANTED:
+                self._auth_state = AuthState.ACCESS_GRANTED
+                self._auth_start_time = time.time()
+                
+                # Complete the access control check (unlock, notify, db logs)
+                from modules.access_controller import AccessController
+                ac = AccessController(self.door_controller)
+                ac.process_qr_scan(
+                    qr_token=qr_result.qr_token,
+                    door_name="Main Entrance",
+                    camera_id="Front Camera"
+                )
+                
+                user_name = qr_result.user_name or "User"
+                self.auth_result_var.set(f"ACCESS GRANTED\n{user_name}")
+                self.auth_result_label.config(bg="#004400", fg="#00ff88")
+                self._log_activity(f"ACCESS GRANTED: {user_name} ({qr_result.employee_id})")
+                
+            elif qr_result.status == QRStatus.ACCESS_DENIED:
+                self._auth_state = AuthState.ACCESS_DENIED
+                self._auth_start_time = time.time()
+                
+                # Log failed attempt
+                from modules.access_controller import AccessController
+                ac = AccessController(self.door_controller)
+                ac.process_qr_scan(
+                    qr_token=qr_result.qr_token,
+                    door_name="Main Entrance",
+                    camera_id="Front Camera"
+                )
+                
+                reason = qr_result.message or "Access Denied"
+                self.auth_result_var.set(f"ACCESS DENIED\n{reason}")
+                self.auth_result_label.config(bg="#440000", fg="#ff4444")
+                self._log_activity(f"ACCESS DENIED: {reason}")
+
+    def _reset_auth_state(self):
+        self._auth_state             = AuthState.IDLE
+        self._current_qr_result      = None
+        self._current_face_result    = None
+        self._auth_start_time        = None
+        self.auth_result_var.set("WAITING")
+        self.auth_result_label.config(bg="#333333", fg="#ffffff")
+
+    def _update_sensor_display(self):
+        """Update the ultrasonic sensor panel with the latest reading."""
+        global _sensor_monitor
+        if _sensor_monitor is None:
+            return
+        self._sensor_poll()
+
+    def _sensor_poll(self):
+        """Called by the GUI timer; updates the sensor display fields."""
+        dist = self._proximity_distance_cm
+        if dist < 0:
+            self.sensor_dist_var.set("—")
+        else:
+            self.sensor_dist_var.set(f"{dist:.1f}")
+        self.sensor_status_var.set(self._proximity_status)
 
     def _update_face_display(self, face_result: FaceResult):
         if face_result.frame is not None:
@@ -425,27 +548,11 @@ class SmartDoorGUI:
             self.face_status_label.config(fg="#888888")
         self.face_status_var.set(status_text)
 
-    def _update_sensor_display(self):
-        """Update the ultrasonic sensor panel with the latest reading."""
-        global _sensor_monitor
-        if _sensor_monitor is None:
-            return
-        self._sensor_poll()
-
-    def _sensor_poll(self):
-        """Called by the GUI timer; updates the sensor display fields."""
-        dist = self._proximity_distance_cm
-        if dist < 0:
-            self.sensor_dist_var.set("—")
-        else:
-            self.sensor_dist_var.set(f"{dist:.1f}")
-        self.sensor_status_var.set(self._proximity_status)
-
-    def _process_authentication(self, face_result: FaceResult):
+    def _process_face_authentication(self, face_result: FaceResult):
         if self._auth_state in (AuthState.ACCESS_GRANTED,
                                 AuthState.ACCESS_DENIED,
                                 AuthState.TIMEOUT):
-            if time.time() - self._auth_start_time > 5:
+            if time.time() - self._auth_start_time > 4:
                 self._reset_auth_state()
             return
 
@@ -455,60 +562,72 @@ class SmartDoorGUI:
         if self._auth_state == AuthState.IDLE:
             if face_result.status == FaceStatus.FACE_MATCHED:
                 user = self.user_repo.get_by_id(face_result.user_id)
-                if user and user.get("is_active", False):
-                    self._auth_state = AuthState.FACE_MATCHED
-                    self._matched_face_user_id = face_result.user_id
+                if user and (user.get("status", "Active") == "Active" or user.get("is_active", False)):
+                    allowed_doors = (user.get("allowed_doors") or "Main Entrance").split(",")
+                    if "Main Entrance" not in allowed_doors:
+                        self._handle_face_failure("No Access to Main Entrance", face_result.user_id, face_result)
+                        return
+                    
+                    self._auth_state = AuthState.ACCESS_GRANTED
                     self._auth_start_time = time.time()
                     self._current_face_result = face_result
-                    self._grant_access(user)
+                    self._grant_face_access(user, face_result)
 
-        elif self._auth_state == AuthState.FACE_MATCHED:
-            if time.time() - self._auth_start_time > AUTH_TIMEOUT:
-                self._handle_auth_failure("Authentication timeout")
-
-    def _grant_access(self, user: dict):
-        self._auth_state = AuthState.ACCESS_GRANTED
-        self._auth_start_time = time.time()
+    def _grant_face_access(self, user: dict, face_result: FaceResult):
         user_name = f"{user['first_name']} {user['last_name']}"
         self.auth_result_var.set(f"ACCESS GRANTED\n{user_name}")
         self.auth_result_label.config(bg="#004400", fg="#00ff88")
-        self.door_controller.unlock(reason=f"Authenticated: {user_name}")
+        self.door_controller.unlock(reason=f"Face ID: {user_name}")
         self.access_log_repo.log_access(
             user_id=user["id"], event_type="ENTRY", result="SUCCESS",
             face_match=True,
-            confidence_score=(
-                self._current_face_result.confidence
-                if self._current_face_result else 0),
+            confidence_score=face_result.confidence or 1.0,
+            door="Main Entrance"
         )
-        self._log_activity(f"ACCESS GRANTED: {user_name}")
-        logger.info("Access granted to %s", user_name)
+        self._log_activity(f"ACCESS GRANTED: {user_name} (Face ID)")
+        logger.info("Access granted via Face ID to %s", user_name)
 
-    def _handle_auth_failure(self, reason: str):
-        if self.door_controller.is_unlocked():
-            return
+        # Non-blocking notification
+        try:
+            from modules.access_controller import AccessController
+            ac = AccessController(self.door_controller)
+            import threading
+            threading.Thread(
+                target=ac._dispatch_notifications,
+                args=(user, True, "Face Recognition Authenticated", "Main Entrance"),
+                daemon=True
+            ).start()
+        except Exception as e:
+            logger.error("Face notification dispatch error: %s", e)
+
+    def _handle_face_failure(self, reason: str, user_id: Optional[int], face_result: FaceResult):
         self._auth_state = AuthState.ACCESS_DENIED
         self._auth_start_time = time.time()
         self.auth_result_var.set(f"ACCESS DENIED\n{reason}")
         self.auth_result_label.config(bg="#440000", fg="#ff4444")
-        self.door_controller.lock(reason="Access denied")
         self.access_log_repo.log_access(
-            user_id=self._matched_face_user_id,
-            event_type="ENTRY", result="DENIED",
-            face_match=(self._current_face_result is not None
-                        and self._current_face_result.status
-                        == FaceStatus.FACE_MATCHED),
+            user_id=user_id, event_type="ENTRY", result="DENIED",
+            face_match=True,
+            confidence_score=face_result.confidence or 0.0,
             failure_reason=reason,
+            door="Main Entrance"
         )
-        self._log_activity(f"ACCESS DENIED: {reason}")
-        logger.warning("Access denied: %s", reason)
+        self._log_activity(f"ACCESS DENIED: {reason} (Face ID)")
+        logger.warning("Access denied via Face ID: %s", reason)
 
-    def _reset_auth_state(self):
-        self._auth_state             = AuthState.IDLE
-        self._matched_face_user_id   = None
-        self._current_face_result    = None
-        self._auth_start_time        = None
-        self.auth_result_var.set("WAITING")
-        self.auth_result_label.config(bg="#333333", fg="#ffffff")
+        # Non-blocking notification
+        try:
+            user = self.user_repo.get_by_id(user_id) if user_id else None
+            from modules.access_controller import AccessController
+            ac = AccessController(self.door_controller)
+            import threading
+            threading.Thread(
+                target=ac._dispatch_notifications,
+                args=(user, False, f"Face Denied: {reason}", "Main Entrance"),
+                daemon=True
+            ).start()
+        except Exception as e:
+            logger.error("Face failure notification dispatch error: %s", e)
 
     # ─── Door status ─────────────────────────────────────────────────────
 

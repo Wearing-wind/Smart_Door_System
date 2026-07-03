@@ -5,7 +5,10 @@ Handles face detection, encoding, and matching using face_recognition library.
 
 import cv2
 import numpy as np
-import face_recognition
+try:
+    import face_recognition
+except ImportError:
+    face_recognition = None
 import threading
 import logging
 from typing import Optional, Tuple, List, Dict, Any, Union

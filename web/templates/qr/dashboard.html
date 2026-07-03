@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}QR Pass Dashboard - Smart Door Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/qr.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1><i class="fas fa-qrcode"></i> QR Pass Management</h1>
+        <p>Secure Visitor Management & Card Control System</p>
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('add-visitor-modal').style.display='flex'">
+        <i class="fas fa-user-plus"></i> Register Visitor
+    </button>
+</div>
+
+<!-- Statistics widgets -->
+<div class="qr-stats-grid">
+    <div class="qr-stat-card qr-glass-card">
+        <div class="qr-stat-icon bg-primary">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="qr-stat-info">
+            <h3 id="widget-total-users">{{ stats.total_users }}</h3>
+            <p>Total Users</p>
+        </div>
+    </div>
+    
+    <div class="qr-stat-card qr-glass-card">
+        <div class="qr-stat-icon bg-success">
+            <i class="fas fa-id-card"></i>
+        </div>
+        <div class="qr-stat-info">
+            <h3>{{ stats.active_passes }}</h3>
+            <p>Active Passes</p>
+        </div>
+    </div>
+
+    <div class="qr-stat-card qr-glass-card">
+        <div class="qr-stat-icon bg-info">
+            <i class="fas fa-sign-in-alt"></i>
+        </div>
+        <div class="qr-stat-info">
+            <h3>{{ stats.today_entries }}</h3>
+            <p>Today's Entries</p>
+        </div>
+    </div>
+
+    <div class="qr-stat-card qr-glass-card">
+        <div class="qr-stat-icon bg-warning">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="qr-stat-info">
+            <h3>{{ stats.today_visitors }}</h3>
+            <p>Today's Visitors</p>
+        </div>
+    </div>
+
+    <div class="qr-stat-card qr-glass-card">
+        <div class="qr-stat-icon bg-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="qr-stat-info">
+            <h3>{{ stats.failed_attempts }}</h3>
+            <p>Failed Attempts</p>
+        </div>
+    </div>
+</div>
+
+<div class="qr-form-section">
+    <!-- Door status and camera feed widget -->
+    <div class="qr-glass-card">
+        <div class="card-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.25rem;"><i class="fas fa-camera"></i> Live Scanner Feed</h2>
+            <span class="badge badge-success"><i class="fas fa-circle"></i> Camera Online</span>
+        </div>
+        <div class="qr-camera-container">
+            <div style="text-align: center; color: #64748b;">
+                <i class="fas fa-qrcode" style="font-size: 4rem; color: #3b82f6; margin-bottom: 1rem; animation: pulse 1.5s infinite;"></i>
+                <p style="font-size: 1.1rem; color: #e2e8f0; font-weight: 500;">QR Scanner Active</p>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Scanner is processing inputs and controlling the door lock</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(15, 23, 42, 0.4); border-radius: 0.5rem; border: 1.2px solid var(--glass-border);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-door-closed" style="font-size: 1.5rem; color: #ef4444;"></i>
+                <div>
+                    <span style="font-size: 0.8rem; color: #94a3b8; display: block; text-transform: uppercase;">Door Controller</span>
+                    <strong style="font-size: 1.1rem; color: #e2e8f0;">{{ door_state }}</strong>
+                </div>
+            </div>
+            <a href="{{ url_for('qr.list_passes') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-id-card"></i> Manage Passes
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="qr-glass-card">
+        <div class="card-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.25rem;"><i class="fas fa-history"></i> Real-time Logs</h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{{ url_for('qr.reports') }}" class="btn btn-secondary btn-sm"><i class="fas fa-chart-line"></i> Analytics</a>
+                <a href="{{ url_for('logs') }}" class="btn btn-secondary btn-sm">View All</a>
+            </div>
+        </div>
+        
+        <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+            <table class="table" id="dashboard-recent-logs">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Door</th>
+                        <th>Result</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if recent_logs %}
+                        {% for log in recent_logs %}
+                        <tr>
+                            <td>{{ log.access_date }} {{ log.access_time }}</td>
+                            <td><strong>{{ log.user_name or 'Unknown Scan' }}</strong></td>
+                            <td>{{ log.door or 'Main Entrance' }}</td>
+                            <td>
+                                <span class="badge badge-{{ 'success' if log.result == 'SUCCESS' else 'danger' if log.result == 'DENIED' else 'warning' }}">
+                                    {{ log.result }}
+                                </span>
+                            </td>
+                            <td class="text-muted" style="font-size: 0.85rem;">{{ log.failure_reason or log.reason or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No recent activity</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="qr-glass-card">
+    <div class="card-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        <h2 style="font-size: 1.25rem;"><i class="fas fa-bell"></i> Active Security Notifications</h2>
+    </div>
+    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-envelope-open-text {{ 'text-success' if email_enabled else 'text-muted' }}" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Email Warnings</strong>
+                <span style="font-size: 0.8rem; color: #94a3b8; display: block;">{{ 'Enabled' if email_enabled else 'Disabled' }}</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-network-wired {{ 'text-success' if webhook_enabled else 'text-muted' }}" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Webhook Events</strong>
+                <span style="font-size: 0.8rem; color: #94a3b8; display: block;">{{ 'Enabled' if webhook_enabled else 'Disabled' }}</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-sms {{ 'text-success' if sms_enabled else 'text-muted' }}" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>SMS Dispatcher</strong>
+                <span style="font-size: 0.8rem; color: #94a3b8; display: block;">{{ 'Enabled' if sms_enabled else 'Disabled' }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dialog for Registering a Visitor -->
+<div id="add-visitor-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 2rem 0;">
+    <div class="qr-glass-card" style="width: 100%; max-width: 600px; padding: 2rem; margin: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; margin: 0;"><i class="fas fa-user-plus"></i> Register Visitor & Email Pass</h2>
+            <button onclick="document.getElementById('add-visitor-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <form method="POST" action="{{ url_for('qr.add_visitor') }}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="v_first_name">First Name <span class="required">*</span></label>
+                    <input type="text" id="v_first_name" name="first_name" required placeholder="e.g. John">
+                </div>
+                <div class="form-group">
+                    <label for="v_last_name">Last Name <span class="required">*</span></label>
+                    <input type="text" id="v_last_name" name="last_name" required placeholder="e.g. Doe">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="v_email">Email Address <span class="required">*</span></label>
+                    <input type="email" id="v_email" name="email" required placeholder="visitor@example.com">
+                    <small class="form-help">The temporary QR access pass will be emailed here.</small>
+                </div>
+                <div class="form-group">
+                    <label for="v_phone">Contact Number <span class="required">*</span></label>
+                    <input type="tel" id="v_phone" name="phone" required placeholder="e.g. +1-555-0199">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="v_duration">Validity Duration (Days)</label>
+                    <input type="number" id="v_duration" name="duration_days" value="1" min="1" required>
+                    <small class="form-help">Access expires automatically after this duration.</small>
+                </div>
+                <div class="form-group">
+                    <label for="v_dept">Department</label>
+                    <input type="text" id="v_dept" name="department" value="Visitor">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Authorized Door Access</label>
+                <div class="qr-checkbox-grid">
+                    <label class="qr-checkbox-item"><input type="checkbox" name="allowed_doors" value="Main Entrance" checked> Main Entrance</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="allowed_doors" value="Office"> Office</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="allowed_doors" value="Server Room"> Server Room</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="allowed_doors" value="Laboratory"> Laboratory</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="allowed_doors" value="Warehouse"> Warehouse</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="allowed_doors" value="Meeting Room"> Meeting Room</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="allowed_doors" value="Reception" checked> Reception</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Access Schedule Days (Optional)</label>
+                <div class="qr-checkbox-grid">
+                    <label class="qr-checkbox-item"><input type="checkbox" name="schedule_days" value="0" class="schedule-day-check"> Mon</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="schedule_days" value="1" class="schedule-day-check"> Tue</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="schedule_days" value="2" class="schedule-day-check"> Wed</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="schedule_days" value="3" class="schedule-day-check"> Thu</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="schedule_days" value="4" class="schedule-day-check"> Fri</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="schedule_days" value="5" class="schedule-day-check"> Sat</label>
+                    <label class="qr-checkbox-item"><input type="checkbox" name="schedule_days" value="6" class="schedule-day-check"> Sun</label>
+                </div>
+            </div>
+
+            <div class="form-row" id="schedule-time-row-v" style="display: none;">
+                <div class="form-group">
+                    <label for="v_start_time">Start Time</label>
+                    <input type="time" id="v_start_time" name="start_time" value="09:00">
+                </div>
+                <div class="form-group">
+                    <label for="v_end_time">End Time</label>
+                    <input type="time" id="v_end_time" name="end_time" value="18:00">
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Register & Send Pass</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('add-visitor-modal').style.display='none'"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/qr.js') }}"></script>
+{% endblock %}

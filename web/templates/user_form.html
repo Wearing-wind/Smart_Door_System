@@ -94,6 +94,87 @@
                            placeholder="e.g., Software Engineer">
                 </div>
             </div>
+
+            <!-- New Access Control and QR parameters -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="user_type">
+                        <i class="fas fa-user-tag"></i>
+                        User Type <span class="required">*</span>
+                    </label>
+                    <select id="user_type" name="user_type" required style="width: 100%; padding: 0.5rem; background: var(--darker); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text);">
+                        <option value="Employee" {% if user and user.user_type == 'Employee' %}selected{% endif %}>Employee</option>
+                        <option value="Administrator" {% if user and user.user_type == 'Administrator' %}selected{% endif %}>Administrator</option>
+                        <option value="Security Staff" {% if user and user.user_type == 'Security Staff' %}selected{% endif %}>Security Staff</option>
+                        <option value="Visitor" {% if user and user.user_type == 'Visitor' %}selected{% endif %}>Visitor</option>
+                        <option value="Contractor" {% if user and user.user_type == 'Contractor' %}selected{% endif %}>Contractor</option>
+                        <option value="Delivery Staff" {% if user and user.user_type == 'Delivery Staff' %}selected{% endif %}>Delivery Staff</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="access_level">
+                        <i class="fas fa-key"></i>
+                        Access Level <span class="required">*</span>
+                    </label>
+                    <select id="access_level" name="access_level" required style="width: 100%; padding: 0.5rem; background: var(--darker); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text);">
+                        <option value="Normal" {% if user and user.access_level == 'Normal' %}selected{% endif %}>Normal</option>
+                        <option value="High" {% if user and user.access_level == 'High' %}selected{% endif %}>High</option>
+                        <option value="Guest" {% if user and user.access_level == 'Guest' %}selected{% endif %}>Guest</option>
+                        <option value="Admin" {% if user and user.access_level == 'Admin' %}selected{% endif %}>Administrator</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="status">
+                        <i class="fas fa-toggle-on"></i>
+                        Status <span class="required">*</span>
+                    </label>
+                    <select id="status" name="status" required style="width: 100%; padding: 0.5rem; background: var(--darker); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text);">
+                        <option value="Active" {% if not user or user.status == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Disabled" {% if user and user.status == 'Disabled' %}selected{% endif %}>Disabled</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="expiration_date">
+                        <i class="fas fa-calendar-times"></i>
+                        Expiration Date (Optional)
+                    </label>
+                    <input type="date" id="expiration_date" name="expiration_date" style="width: 100%; padding: 0.5rem; background: var(--darker); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text);"
+                           value="{{ user.expiration_date.split(' ')[0] if user and user.expiration_date else '' }}">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label><i class="fas fa-door-closed"></i> Allowed Doors</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; padding: 0.75rem; background: var(--darker); border: 1px solid var(--border); border-radius: 0.375rem; margin-top: 0.25rem;">
+                    {% set doors_list = (user.allowed_doors or 'Main Entrance').split(',') if user else ['Main Entrance', 'Office', 'Reception'] %}
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; color: var(--text);">
+                        <input type="checkbox" name="allowed_doors" value="Main Entrance" {% if 'Main Entrance' in doors_list %}checked{% endif %}> Main Entrance
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; color: var(--text);">
+                        <input type="checkbox" name="allowed_doors" value="Office" {% if 'Office' in doors_list %}checked{% endif %}> Office
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; color: var(--text);">
+                        <input type="checkbox" name="allowed_doors" value="Server Room" {% if 'Server Room' in doors_list %}checked{% endif %}> Server Room
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; color: var(--text);">
+                        <input type="checkbox" name="allowed_doors" value="Laboratory" {% if 'Laboratory' in doors_list %}checked{% endif %}> Laboratory
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; color: var(--text);">
+                        <input type="checkbox" name="allowed_doors" value="Warehouse" {% if 'Warehouse' in doors_list %}checked{% endif %}> Warehouse
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; color: var(--text);">
+                        <input type="checkbox" name="allowed_doors" value="Meeting Room" {% if 'Meeting Room' in doors_list %}checked{% endif %}> Meeting Room
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; color: var(--text);">
+                        <input type="checkbox" name="allowed_doors" value="Reception" {% if 'Reception' in doors_list %}checked{% endif %}> Reception
+                    </label>
+                </div>
+            </div>
             
             {% if user %}
             <div class="enrollment-info">
