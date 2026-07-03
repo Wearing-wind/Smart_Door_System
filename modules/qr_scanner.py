@@ -81,8 +81,11 @@ class QRScannerEngine:
         frame_copy = frame.copy()
         
         try:
-            # 1. Detect and decode QR Code in frame
-            val, pts, _ = self.detector.detectAndDecode(frame_copy)
+            # 1. Detect and decode QR Code(s) in frame
+            #    NOTE: detectAndDecodeMulti is used instead of detectAndDecode
+            #    because detectAndDecode has a regression in OpenCV 5.x where
+            #    it returns an empty string even when a QR code is found.
+            retval, decoded_info, pts, _ = self.detector.detectAndDecodeMulti(frame_copy)
             
             current_time = time.time()
             
@@ -92,8 +95,20 @@ class QRScannerEngine:
                 self.last_validation_status = QRStatus.NO_QR
                 self.last_validation_msg = ""
 
+            # Check if any QR code was found and decoded
+            val = ""
+            qr_pts = None
+            if retval and decoded_info:
+                for i, info in enumerate(decoded_info):
+                    if info and info.strip():
+                        val = info.strip()
+                        # Extract points for this specific QR code
+                        if pts is not None and len(pts) > i:
+                            qr_pts = pts[i]
+                        break
+
             if val:
-                qr_token = val.strip()
+                qr_token = val
                 
                 # Check scan cooldown to prevent double scans
                 is_in_cooldown = False
@@ -108,9 +123,6 @@ class QRScannerEngine:
                     self.last_validation_time = current_time
                     
                     # Validate against database
-                    # Importing inside method to avoid circular reference issues if any
-                    from modules.access_controller import AccessController
-                    ac = AccessController(door_controller=None) # We just use it for validation
                     is_valid, user, reason = self.qr_repo.validate_token(qr_token, "Main Entrance")
                     
                     if is_valid:
@@ -130,10 +142,11 @@ class QRScannerEngine:
                         logger.warning(f"QR Scan rejected: {reason} ({qr_token})")
                 
                 # Draw bounding box for the detected QR code
-                if pts is not None and len(pts) > 0:
-                    pts_int = pts.astype(int)
-                    if pts_int.ndim == 3:
-                        pts_int = pts_int[0]
+                if qr_pts is not None:
+                    pts_int = qr_pts.astype(int)
+                    if pts_int.ndim == 1:
+                        # Reshape flat array of coords into Nx2
+                        pts_int = pts_int.reshape(-1, 2)
                     
                     # Pick box color based on validation status
                     if self.last_validation_status == QRStatus.ACCESS_GRANTED:
@@ -162,7 +175,7 @@ class QRScannerEngine:
                     user_name=self.last_validation_user_name,
                     employee_id=self.last_validation_employee_id,
                     frame=frame_copy,
-                    points=pts,
+                    points=qr_pts,
                     message=self.last_validation_msg
                 )
 
