@@ -23,12 +23,9 @@ from tkinter import ttk, messagebox
 
 try:
     from PIL import Image, ImageTk
-except ImportError as exc:
-    raise ImportError(
-        "Pillow is required for the GUI image display. "
-        "Install it with 'sudo apt install python3-pil python3-pil.imagetk' "
-        "or 'pip install pillow'."
-    ) from exc
+    HAS_PILLOW = True
+except ImportError:
+    HAS_PILLOW = False
 
 import cv2
 
@@ -710,6 +707,167 @@ class SmartDoorGUI:
         self.root.mainloop()
 
 
+class HeadlessSmartDoor:
+    """Headless console-only runner for when GUI or Pillow is not available."""
+    
+    def __init__(self, simulation: bool = True):
+        self.simulation = simulation
+        
+        self.db = DatabaseManager()
+        self.user_repo = UserRepository()
+        self.access_log_repo = AccessLogRepository()
+        self.system_log = SystemLogRepository()
+
+        self.qr_scanner = QRScannerEngine()
+        self.face_engine = FaceRecognitionEngine()
+        self.door_controller = DoorController(simulation=simulation)
+        self.door_monitor = DoorMonitor(self.door_controller)
+        
+        self._running = False
+        self._face_enabled = self.face_engine.is_available()
+        self._auth_state = AuthState.IDLE
+        self._auth_start_time = None
+        self._proximity_distance_cm = -1.0
+        self._proximity_status = "Sensor idle"
+
+    def start(self):
+        logger.info("Initializing Headless Security Gate Controller...")
+        self.door_monitor.start()
+        
+        self._running = True
+        self.system_log.info("HeadlessController", "Console controller started successfully")
+        
+        # Start proximity sensor thread if not simulation
+        self._sensor_monitor = self.door_controller._ultrasonic
+        if self._sensor_monitor and not self.simulation:
+            self._sensor_monitor.start()
+            
+            def sensor_listener():
+                while self._running:
+                    event, dist = self._sensor_monitor.get_latest_event()
+                    if event == SensorEvent.PROXIMITY:
+                        logger.info(f"[PROXIMITY ALERT] Object at {dist:.1f} cm - unlocking Main Entrance")
+                        self.door_controller.unlock(reason=f"Proximity sensor: {dist:.1f} cm")
+                    time.sleep(0.5)
+            threading.Thread(target=sensor_listener, daemon=True).start()
+
+        # Run process loop
+        logger.info("Headless hybrid scan loop started.")
+        try:
+            while self._running:
+                # 1. Scan for QR code
+                qr_result = self.qr_scanner.process_frame()
+                
+                if qr_result.status in (QRStatus.ACCESS_GRANTED, QRStatus.ACCESS_DENIED, QRStatus.QR_DETECTED, QRStatus.VALIDATING):
+                    self._process_qr_authentication(qr_result)
+                else:
+                    # 2. No QR detected, try Face Recognition if enabled
+                    if self._face_enabled:
+                        face_result = self.face_engine.process_frame()
+                        self._process_face_authentication(face_result)
+                    else:
+                        self._process_qr_authentication(qr_result)
+                
+                time.sleep(GUI_UPDATE_INTERVAL / 1000.0)
+        except KeyboardInterrupt:
+            self.stop()
+
+    def _reset_auth_state(self):
+        self._auth_state = AuthState.IDLE
+        self._auth_start_time = None
+
+    def _process_qr_authentication(self, qr_result: QRResult):
+        if self._auth_state in (AuthState.ACCESS_GRANTED, AuthState.ACCESS_DENIED, AuthState.TIMEOUT):
+            if time.time() - self._auth_start_time > 4:
+                self._reset_auth_state()
+            return
+
+        if self.door_controller.is_unlocked():
+            return
+
+        if self._auth_state == AuthState.IDLE:
+            if qr_result.status == QRStatus.ACCESS_GRANTED:
+                self._auth_state = AuthState.ACCESS_GRANTED
+                self._auth_start_time = time.time()
+                
+                from modules.access_controller import AccessController
+                ac = AccessController(self.door_controller)
+                ac.process_qr_scan(
+                    qr_token=qr_result.qr_token,
+                    door_name="Main Entrance",
+                    camera_id="Front Camera"
+                )
+                user_name = qr_result.user_name or "User"
+                logger.info(f"ACCESS GRANTED via QR Code: {user_name} ({qr_result.employee_id})")
+                
+            elif qr_result.status == QRStatus.ACCESS_DENIED:
+                self._auth_state = AuthState.ACCESS_DENIED
+                self._auth_start_time = time.time()
+                
+                from modules.access_controller import AccessController
+                ac = AccessController(self.door_controller)
+                ac.process_qr_scan(
+                    qr_token=qr_result.qr_token,
+                    door_name="Main Entrance",
+                    camera_id="Front Camera"
+                )
+                reason = qr_result.message or "Access Denied"
+                logger.warning(f"ACCESS DENIED via QR Code: {reason}")
+
+    def _process_face_authentication(self, face_result: FaceResult):
+        if self._auth_state in (AuthState.ACCESS_GRANTED, AuthState.ACCESS_DENIED, AuthState.TIMEOUT):
+            if time.time() - self._auth_start_time > 4:
+                self._reset_auth_state()
+            return
+
+        if self.door_controller.is_unlocked():
+            return
+
+        if self._auth_state == AuthState.IDLE:
+            if face_result.status == FaceStatus.FACE_MATCHED:
+                user = self.user_repo.get_by_id(face_result.user_id)
+                if user and (user.get("status", "Active") == "Active" or user.get("is_active", False)):
+                    allowed_doors = (user.get("allowed_doors") or "Main Entrance").split(",")
+                    if "Main Entrance" not in allowed_doors:
+                        logger.warning(f"ACCESS DENIED via Face: No Access to Main Entrance for user ID {face_result.user_id}")
+                        self._auth_state = AuthState.ACCESS_DENIED
+                        self._auth_start_time = time.time()
+                        return
+                    
+                    self._auth_state = AuthState.ACCESS_GRANTED
+                    self._auth_start_time = time.time()
+                    
+                    user_name = f"{user['first_name']} {user['last_name']}"
+                    self.door_controller.unlock(reason=f"Face ID: {user_name}")
+                    self.access_log_repo.log_access(
+                        user_id=user["id"], event_type="ENTRY", result="SUCCESS",
+                        face_match=True,
+                        confidence_score=face_result.confidence or 1.0,
+                        door="Main Entrance"
+                    )
+                    logger.info(f"ACCESS GRANTED via Face ID: {user_name}")
+                    
+                    # Dispatch notifications
+                    try:
+                        from modules.access_controller import AccessController
+                        ac = AccessController(self.door_controller)
+                        threading.Thread(
+                            target=ac._dispatch_notifications,
+                            args=(user, True, "Face Recognition Authenticated", "Main Entrance"),
+                            daemon=True
+                        ).start()
+                    except Exception as e:
+                        logger.error(f"Failed to dispatch face notification: {e}")
+
+    def stop(self):
+        self._running = False
+        self.door_monitor.stop()
+        self.door_controller.cleanup()
+        self.face_engine.stop()
+        self.system_log.info("HeadlessController", "Console controller stopped")
+        logger.info("Headless controller stopped")
+
+
 # ══════════════════════════════════════════════════════════════════════════
 # Entry-point
 # ══════════════════════════════════════════════════════════════════════════
@@ -733,8 +891,14 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     (PROJECT_ROOT / "logs").mkdir(exist_ok=True)
-    app = SmartDoorGUI(simulation=args.simulation)
-    app.run()
+    
+    if HAS_PILLOW:
+        app = SmartDoorGUI(simulation=args.simulation)
+        app.run()
+    else:
+        logger.warning("Pillow is not available (DLL load blocked). Launching in Headless Console mode.")
+        app = HeadlessSmartDoor(simulation=args.simulation)
+        app.start()
 
 
 if __name__ == "__main__":

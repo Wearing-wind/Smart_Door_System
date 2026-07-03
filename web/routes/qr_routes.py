@@ -224,6 +224,7 @@ def add_visitor():
                 email_address=email,
                 first_name=first_name,
                 last_name=last_name,
+                employee_id=employee_id,
                 token=token,
                 allowed_doors=doors_str,
                 expiration_date=display_expiry
