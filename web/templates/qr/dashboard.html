@@ -71,32 +71,17 @@
 </div>
 
 <div class="qr-form-section">
-    <!-- Door status and camera feed widget -->
-    <div class="qr-glass-card">
-        <div class="card-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="font-size: 1.25rem;"><i class="fas fa-camera"></i> Live Scanner Feed</h2>
-            <span class="badge badge-success"><i class="fas fa-circle"></i> Camera Online</span>
-        </div>
-        <div class="qr-camera-container">
-            <div style="text-align: center; color: #64748b;">
-                <i class="fas fa-qrcode" style="font-size: 4rem; color: #3b82f6; margin-bottom: 1rem; animation: pulse 1.5s infinite;"></i>
-                <p style="font-size: 1.1rem; color: #e2e8f0; font-weight: 500;">QR Scanner Active</p>
-                <p style="font-size: 0.9rem; color: #94a3b8;">Scanner is processing inputs and controlling the door lock</p>
+    <div class="qr-glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-door-closed" style="font-size: 1.5rem; color: #ef4444;"></i>
+            <div>
+                <span style="font-size: 0.8rem; color: #94a3b8; display: block; text-transform: uppercase;">Door Controller</span>
+                <strong style="font-size: 1.1rem; color: #e2e8f0;">{{ door_state }}</strong>
             </div>
         </div>
-        
-        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(15, 23, 42, 0.4); border-radius: 0.5rem; border: 1.2px solid var(--glass-border);">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="fas fa-door-closed" style="font-size: 1.5rem; color: #ef4444;"></i>
-                <div>
-                    <span style="font-size: 0.8rem; color: #94a3b8; display: block; text-transform: uppercase;">Door Controller</span>
-                    <strong style="font-size: 1.1rem; color: #e2e8f0;">{{ door_state }}</strong>
-                </div>
-            </div>
-            <a href="{{ url_for('qr.list_passes') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-id-card"></i> Manage Passes
-            </a>
-        </div>
+        <a href="{{ url_for('qr.list_passes') }}" class="btn btn-primary">
+            <i class="fas fa-id-card"></i> Manage Passes
+        </a>
     </div>
 
     <!-- Recent Activity -->
