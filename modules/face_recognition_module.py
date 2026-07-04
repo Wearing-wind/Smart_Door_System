@@ -5,9 +5,15 @@ Handles face detection, encoding, and matching using face_recognition library.
 
 import cv2
 import numpy as np
+import sys
+import io
+import contextlib
+
 try:
-    import face_recognition
-except ImportError:
+    # face_recognition calls quit() if face_recognition_models is missing, so we must suppress stdout and catch SystemExit
+    with contextlib.redirect_stdout(io.StringIO()):
+        import face_recognition
+except (ImportError, SystemExit, Exception):
     # OpenCV 5.0 deep learning fallback for face_recognition API
     class _FaceRecognitionFallback:
         def __init__(self):

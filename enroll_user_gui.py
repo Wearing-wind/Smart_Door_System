@@ -13,9 +13,12 @@ import threading
 import time
 import cv2
 import numpy as np
+import io
+import contextlib
 try:
-    import face_recognition
-except ImportError:
+    with contextlib.redirect_stdout(io.StringIO()):
+        import face_recognition
+except (ImportError, SystemExit, Exception):
     face_recognition = None
 from PIL import Image, ImageTk
 import logging
