@@ -63,7 +63,6 @@ try:
     GPIO_AVAILABLE = True
 except ImportError:
     GPIO_AVAILABLE = False
-    logger.info("RPi.GPIO not available — running in simulation mode.")
 
 # ────────────────────────────────────────────────────────────────────────
 # DOOR STATE ENUMS
@@ -330,7 +329,6 @@ class DoorController:
                 logger.error(f"DoorController: Failed to connect to Arduino on {target_port}: {e}")
                 self.simulation = True
         else:
-            logger.info("DoorController: No Arduino found. Running in pure simulation mode.")
             self.simulation = True
             # Start the dummy ultrasonic sensor anyway
             self._ultrasonic.start()
@@ -383,7 +381,6 @@ class DoorController:
             logger.info("DoorController: HC-SR04 trig=GPIO%d echo=GPIO%d  threshold=%.1f cm", ULTRASONIC_TRIG_PIN, ULTRASONIC_ECHO_PIN, ULTRASONIC_THRESHOLD)
 
         except Exception as exc:
-            logger.error("GPIO init failed: %s — simulation mode.", exc)
             self.simulation = True
             self._init_serial_fallback()
 
