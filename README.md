@@ -1004,10 +1004,10 @@ copies or substantial portions of the Software.
 |------|---------|
 | 🏢 **Organization** | Sovryx Tech |
 | 🌍 **Country** | Nepal 🇳🇵 |
-| 📧 **Email** | [mohit@sovryx.com](mailto:mohit@sovryx.com) |
-| 🔗 **GitHub** | [@Wearing-wind](https://github.com/Wearing-wind) |
+| 📧 **Email** | [mohit@sovryxtech.com.np](mailto:mohit@sovryxtech.com.np) |
+| 🔗 **GitHub** | [@Mohit Stha](https://github.com/mohit282-cpu) |
 | 💼 **LinkedIn** | [Mohit Shrestha](#) |
-| 🌐 **Website** | [sovryx.com](#) |
+| 🌐 **Website** | [sovryxtech.com.np]() |
 
 **Passionate about AI, IoT, and secure systems. Building intelligent solutions for the future.**
 
