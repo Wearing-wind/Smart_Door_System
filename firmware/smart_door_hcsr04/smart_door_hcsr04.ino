@@ -192,6 +192,22 @@ void loop() {
 
   unsigned long now = millis();
 
+  // 0. Handle incoming commands from Python (e.g. Face Recognition)
+  if (Serial.available() > 0) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    if (cmd == "UNLOCK") {
+      Serial.println(F("[CMD] Received UNLOCK command from Host"));
+      open_door();
+      door_state = STATE_OPEN;
+      state_enter_ms = now;
+      last_detected_ms = now;
+      object_detected = true;
+      detected_count = 0;
+      not_detected_count = 0;
+    }
+  }
+
   // 1. Non-blocking measurement cadence
   if (now - last_measure_ms >= MEASURE_INTERVAL) {
     last_measure_ms = now;

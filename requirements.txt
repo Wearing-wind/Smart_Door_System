@@ -17,8 +17,8 @@ bcrypt>=4.0.0
 # Database
 # SQLite is included with Python
 
-# GPIO (for Raspberry Pi - optional)
-# RPi.GPIO>=0.7.0
+# Hardware control (Windows fallback via Arduino)
+pyserial>=3.5
 
 # Development/Testing (optional)
 # pytest>=7.0.0

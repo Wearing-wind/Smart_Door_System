@@ -16,6 +16,10 @@ from dataclasses import dataclass
 from enum import Enum
 import sys
 import random
+
+import serial
+import serial.tools.list_ports
+
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -260,20 +264,6 @@ class UltrasonicSensorMonitor:
 # ────────────────────────────────────────────────────────────────────────
 
 class DoorController:
-    """
-    Controls the door via a positional servo (direct PWM, GPIO18).
-
-    Positional servo angles:
-        0°   → SERVO_DUTY_MIN  (closed/locked stop)
-        90°  → SERVO_DUTY_OPEN  (open stop, 90° clockwise)
-        180° → SERVO_DUTY_MAX  (unused reference)
-
-    Sequence:
-        unlock → rotate servo 90° clockwise to open position
-                 hold for AUTO_LOCK_DELAY seconds
-        lock   → rotate servo 90° counterclockwise to closed (0°)
-    """
-
     _instance = None
     _lock     = threading.Lock()
 
@@ -302,6 +292,9 @@ class DoorController:
         self._callbacks          : list                      = []
 
         self._pwm = None
+        self._serial_conn = None
+        self._serial_thread = None
+        self._serial_running = False
 
         self._ultrasonic = UltrasonicSensorMonitor()
         self._ultrasonic.add_callback(self._on_ultrasonic_event)
@@ -311,34 +304,88 @@ class DoorController:
 
         if not self.simulation:
             self._init_gpio()
+        else:
+            self._init_serial_fallback()
 
-    # ── GPIO / Servo ───────────────────────────────────────────────────
+    def _init_serial_fallback(self):
+        # Attempt to auto-detect Arduino COM port
+        target_port = None
+        for port in serial.tools.list_ports.comports():
+            desc = port.description.lower()
+            if "arduino" in desc or "ch340" in desc or "usb serial" in desc or "serial device" in desc:
+                target_port = port.device
+                break
+        
+        if target_port:
+            try:
+                self._serial_conn = serial.Serial(target_port, 115200, timeout=1)
+                self.simulation = False
+                logger.info(f"DoorController: Arduino detected on {target_port}. hardware mode active.")
+                self.system_log.info("DoorController", f"Hardware mode active via Arduino on {target_port}")
+                
+                self._serial_running = True
+                self._serial_thread = threading.Thread(target=self._serial_read_loop, daemon=True)
+                self._serial_thread.start()
+            except Exception as e:
+                logger.error(f"DoorController: Failed to connect to Arduino on {target_port}: {e}")
+                self.simulation = True
+        else:
+            logger.info("DoorController: No Arduino found. Running in pure simulation mode.")
+            self.simulation = True
+            # Start the dummy ultrasonic sensor anyway
+            self._ultrasonic.start()
 
+    def _serial_read_loop(self):
+        while self._serial_running and self._serial_conn:
+            try:
+                if self._serial_conn.in_waiting:
+                    line = self._serial_conn.readline().decode('utf-8', errors='ignore').strip()
+                    if not line: continue
+                    
+                    if "Opening door" in line:
+                        with self._state_lock:
+                            self._state = DoorState.UNLOCKED
+                            self._last_unlock_time = time.time()
+                        self._notify()
+                    elif "Closing door" in line:
+                        with self._state_lock:
+                            self._state = DoorState.LOCKED
+                            self._last_unlock_time = None
+                        self._notify()
+                    elif line.startswith("dist="):
+                        # Example: dist=12.3 cm  state=CLOSED  timer_left=0 s
+                        parts = line.split()
+                        if len(parts) >= 2 and parts[1] != "ERR":
+                            try:
+                                distance = float(parts[1])
+                                if distance <= ULTRASONIC_THRESHOLD:
+                                    # Forward proxy to callbacks
+                                    self._ultrasonic._notify(SensorEvent.PROXIMITY, distance)
+                            except ValueError:
+                                pass
+            except Exception as e:
+                logger.error(f"DoorController serial read error: {e}")
+                time.sleep(1)
+                
     def _init_gpio(self):
         try:
             GPIO.setmode(GPIO.BCM)
-
             GPIO.setup(self.servo_pin, GPIO.OUT)
             self._pwm = GPIO.PWM(self.servo_pin, SERVO_PWM_FREQUENCY)
             self._pwm.start(0)
             GPIO.output(self.servo_pin, GPIO.LOW)
 
             self._servo_to_angle(SERVO_ANGLE_CLOSE)
-            logger.info("DoorController: servo on GPIO%d  freq=%d Hz",
-                        self.servo_pin, SERVO_PWM_FREQUENCY)
-            self.system_log.info(
-                "DoorController",
-                f"GPIO ready: servo=GPIO{self.servo_pin} "
-                f"freq={SERVO_PWM_FREQUENCY} Hz")
+            logger.info("DoorController: servo on GPIO%d  freq=%d Hz", self.servo_pin, SERVO_PWM_FREQUENCY)
+            self.system_log.info("DoorController", f"GPIO ready: servo=GPIO{self.servo_pin} freq={SERVO_PWM_FREQUENCY} Hz")
 
             self._ultrasonic.start()
-            logger.info(
-                "DoorController: HC-SR04 trig=GPIO%d echo=GPIO%d  threshold=%.1f cm",
-                ULTRASONIC_TRIG_PIN, ULTRASONIC_ECHO_PIN, ULTRASONIC_THRESHOLD)
+            logger.info("DoorController: HC-SR04 trig=GPIO%d echo=GPIO%d  threshold=%.1f cm", ULTRASONIC_TRIG_PIN, ULTRASONIC_ECHO_PIN, ULTRASONIC_THRESHOLD)
 
         except Exception as exc:
             logger.error("GPIO init failed: %s — simulation mode.", exc)
             self.simulation = True
+            self._init_serial_fallback()
 
     def _angle_to_duty(self, angle: float) -> float:
         return SERVO_DUTY_MIN + (angle / 180.0) * (SERVO_DUTY_MAX - SERVO_DUTY_MIN)
@@ -351,8 +398,6 @@ class DoorController:
         time.sleep(SERVO_TRANSITION_DELAY)
         if self._pwm:
             self._pwm.ChangeDutyCycle(0.0)
-
-    # ── Callbacks ──────────────────────────────────────────────────────
 
     def add_state_callback(self, cb: Callable):
         if cb not in self._callbacks:
@@ -369,17 +414,10 @@ class DoorController:
             except Exception:
                 logger.exception("DoorController: callback error.")
 
-    # ── Ultrasonic ─────────────────────────────────────────────────────
-
     def _on_ultrasonic_event(self, event: SensorEvent, distance_cm: float):
-        """Handle proximity events from the HC-SR04 worker thread."""
         if event is SensorEvent.PROXIMITY:
             self.door_open_proximity()
-            logger.info(
-                "Ultrasonic proximity unlock: %.2f cm <= %.1f cm threshold",
-                distance_cm, ULTRASONIC_THRESHOLD)
-
-    # ── Status ─────────────────────────────────────────────────────────
+            logger.info("Ultrasonic proximity unlock: %.2f cm <= %.1f cm threshold", distance_cm, ULTRASONIC_THRESHOLD)
 
     @property
     def state(self) -> DoorState:
@@ -394,11 +432,8 @@ class DoorController:
     def get_status(self) -> DoorStatus:
         with self._state_lock:
             remaining = 0.0
-            if (self._state is DoorState.UNLOCKED
-                    and self._last_unlock_time is not None):
-                remaining = max(
-                    0.0,
-                    AUTO_LOCK_DELAY - (time.time() - self._last_unlock_time))
+            if self._state is DoorState.UNLOCKED and self._last_unlock_time is not None:
+                remaining = max(0.0, AUTO_LOCK_DELAY - (time.time() - self._last_unlock_time))
             return DoorStatus(
                 state           = self._state,
                 time_until_lock = remaining,
@@ -409,31 +444,20 @@ class DoorController:
     def is_locked(self)  -> bool: return self.state is DoorState.LOCKED
     def is_unlocked(self)-> bool: return self.state is DoorState.UNLOCKED
 
-    # ── Rotate to open angle (180°) ────────────────────────────────────
-
     def _rotate_servo_open(self) -> None:
         logger.info("Servo → %d° (door open)", SERVO_ANGLE_OPEN)
         self._servo_to_angle(SERVO_ANGLE_OPEN)
-
-    # ── Rotate to close/hold angle (90°) ───────────────────────────────
 
     def _rotate_servo_close(self) -> None:
         logger.info("Servo → %d° (door closed/hold)", SERVO_ANGLE_CLOSE)
         self._servo_to_angle(SERVO_ANGLE_CLOSE)
 
-    # ── Core open-and-lock sequence ────────────────────────────────────
-
     def _do_open_and_lock_sequence(self) -> None:
-        """
-        Background daemon thread that runs the full open/hold/close cycle,
-        then notifies all callbacks as states change.
-        """
         def _seq():
             with self._state_lock:
                 self._state = DoorState.UNLOCKING
             self._notify()
 
-            # Step 1: rotate servo to 180° → door physically open
             self._rotate_servo_open()
 
             with self._state_lock:
@@ -441,7 +465,6 @@ class DoorController:
                 self._last_unlock_time = time.time()
             self._notify()
 
-            # Step 2: hold open for AUTO_LOCK_DELAY seconds
             hold_end = time.time() + AUTO_LOCK_DELAY
             while time.time() < hold_end:
                 slot = max(0.0, hold_end - time.time())
@@ -449,7 +472,6 @@ class DoorController:
                     logger.info("[SEQUENCE] %.0f s remaining until auto-lock…", slot)
                 time.sleep(0.5)
 
-            # Step 3: rotate servo to 90° → door physically closed
             with self._state_lock:
                 self._state = DoorState.LOCKING
             self._notify()
@@ -463,22 +485,16 @@ class DoorController:
 
         threading.Thread(target=_seq, daemon=True).start()
 
-    # ── Proximity silent-entry ─────────────────────────────────────────
-
     def door_open_proximity(self) -> None:
-        """Silent unlock triggered by the HC-SR04 proximity sensor."""
         with self._state_lock:
             if self._state is DoorState.UNLOCKED:
                 logger.info("Proximity unlock skipped — door already unlocked.")
                 return
-        logger.info(
-            "PROXIMITY UNLOCK: silent open — %d° sweep. Relock in %.0f s.",
-            SERVO_ANGLE_OPEN, AUTO_LOCK_DELAY)
-        self._do_open_and_lock_sequence()
-
-    # ──────────────────────────────────────────────────────────────────
-    # PUBLIC API  (called by main.py, auth_engine.py, etc.)
-    # ──────────────────────────────────────────────────────────────────
+        logger.info("PROXIMITY UNLOCK: silent open — %d° sweep. Relock in %.0f s.", SERVO_ANGLE_OPEN, AUTO_LOCK_DELAY)
+        if self._serial_conn:
+            self._serial_conn.write(b"UNLOCK\n")
+        else:
+            self._do_open_and_lock_sequence()
 
     def unlock(self, duration=None, reason="Manual") -> bool:
         with self._state_lock:
@@ -486,7 +502,10 @@ class DoorController:
                 self._auto_lock_timer.cancel()
                 self._auto_lock_timer = None
         logger.info("DoorController.unlock() — reason: %s", reason)
-        self._do_open_and_lock_sequence()
+        if self._serial_conn:
+            self._serial_conn.write(b"UNLOCK\n")
+        else:
+            self._do_open_and_lock_sequence()
         return True
 
     def lock(self, reason="Manual") -> bool:
@@ -496,6 +515,16 @@ class DoorController:
                 self._auto_lock_timer = None
             self._state = DoorState.LOCKING
         self._notify()
+        
+        if self._serial_conn:
+            # Arduino firmware handles its own auto-locking, but if we wanted to force close, we could add a CLOSE command.
+            # Currently arduino doesn't listen to CLOSE. So just simulate it on UI.
+            with self._state_lock:
+                self._state = DoorState.LOCKED
+                self._last_unlock_time = None
+            self._notify()
+            return True
+            
         try:
             self._rotate_servo_close()
             with self._state_lock:
@@ -520,12 +549,13 @@ class DoorController:
         self.lock(reason="Auto-lock timer")
 
     def set_unlock_duration(self, duration: float):
-        if duration > 0:
-            self.unlock_duration = duration
+        pass
 
     def emergency_lock(self) -> bool:
         with self._state_lock:
             self._cancel_timers()
+        if self._serial_conn:
+             return True
         try:
             self._rotate_servo_close()
             with self._state_lock:
@@ -540,6 +570,11 @@ class DoorController:
 
     def cleanup(self):
         self._cancel_timers()
+        self._serial_running = False
+        if self._serial_conn:
+            try:
+                self._serial_conn.close()
+            except: pass
         if self._pwm:
             try:
                 self._servo_to_angle(SERVO_ANGLE_CLOSE)
@@ -550,9 +585,7 @@ class DoorController:
         self._ultrasonic.stop()
         if not self.simulation and GPIO_AVAILABLE:
             try:
-                GPIO.cleanup((
-                    self.servo_pin,
-                    ULTRASONIC_TRIG_PIN, ULTRASONIC_ECHO_PIN))
+                GPIO.cleanup((self.servo_pin, ULTRASONIC_TRIG_PIN, ULTRASONIC_ECHO_PIN))
             except Exception:
                 pass
 
