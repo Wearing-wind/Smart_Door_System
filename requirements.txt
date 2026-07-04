@@ -11,6 +11,7 @@ dlib>=19.22.0
 
 # Web framework
 Flask>=2.0.0
+waitress>=2.1.0
 bcrypt>=4.0.0
 
 # Database

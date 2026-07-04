@@ -6,8 +6,12 @@ and ultrasonic proximity sensing.
 Face recognition authentication for access.
 """
 
+import os
 import sys
 import threading
+
+# Suppress OpenCV C++ backend warnings before any modules that import cv2
+os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
 import logging
 import time
 from datetime import datetime

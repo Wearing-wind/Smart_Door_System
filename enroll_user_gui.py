@@ -6,6 +6,10 @@ Provides a graphical interface for enrolling face biometrics.
 
 import sys
 import os
+
+# Suppress OpenCV C++ backend warnings before any modules that import cv2
+os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
+
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 from tkinter import font as tkfont

@@ -5,6 +5,10 @@ Flask-based admin dashboard and REST API.
 
 import os
 import sys
+import waitress
+
+# Suppress OpenCV C++ backend warnings before any modules that import cv2
+os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
 import secrets
 import hashlib
 import time
@@ -828,7 +832,7 @@ def run_server(host=None, port=None, debug=False):
     port = port or WEB_PORT
     
     system_log.info('WebApp', f"Starting web server on {host}:{port}")
-    app.run(host=host, port=port, debug=debug, threaded=True)
+    waitress.serve(app, host=host, port=port)
 
 
 if __name__ == '__main__':
