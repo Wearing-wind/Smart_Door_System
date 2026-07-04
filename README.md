@@ -158,52 +158,53 @@ Smart_Door_System/
 │
 ├── 📂 database/
 │   ├── db_manager.py            # Database operations
-│   ├── models.py                # Data models
+│   ├── qr_repository.py         # QR code data operations
+│   ├── schema.sql               # Database schema definition
 │   └── smart_door.db            # SQLite database
 │
-├── 📂 modules/
-│   ├── face_recognition_module.py    # AI face recognition
-│   ├── door_control.py               # Door servo control
-│   ├── ultrasonic_sensor.py          # Proximity sensing
-│   └── auth_engine.py                # Authentication logic
-│
 ├── 📂 firmware/
-│   └── arduino_sketch.ino            # Arduino code
-│
-├── 📂 web/
-│   ├── app.py                   # Flask application
-│   ├── requirements.txt
-│   └── .env.example
-│
-├── 📂 static/
-│   ├── css/
-│   │   ├── style.css
-│   │   └── bootstrap.min.css
-│   ├── js/
-│   │   ├── chart.js
-│   │   └── dashboard.js
-│   └── images/
-│
-├── 📂 templates/
-│   ├── base.html                # Base template
-│   ├── index.html               # Dashboard
-│   ├── login.html               # Login page
-│   ├── users.html               # User management
-│   ├── logs.html                # Access logs
-│   ├── analytics.html           # Statistics
-│   └── settings.html            # Settings panel
+│   └── smart_door_hcsr04/       # Arduino sketch folder
+│       └── smart_door_hcsr04.ino
 │
 ├── 📂 logs/
-│   ├── system.log               # System logs
-│   └── access.log               # Access logs
+│   └── system.log               # System and access logs
+│
+├── 📂 modules/
+│   ├── access_controller.py     # Central access controller
+│   ├── auth_engine.py           # Authentication logic
+│   ├── door_control.py          # Door servo and sensor control
+│   ├── email_notifier.py        # Email alert generation
+│   ├── face_recognition_module.py # AI face recognition
+│   ├── qr_generator.py          # QR Code generation
+│   ├── qr_manager.py            # QR code management logic
+│   └── qr_scanner.py            # QR code camera scanner
+│
+├── 📂 web/
+│   ├── app.py                   # Flask web application
+│   ├── 📂 routes/
+│   │   └── qr_routes.py         # QR related endpoints
+│   ├── 📂 static/
+│   │   ├── css/                 # Stylesheets (style.css, qr.css)
+│   │   └── js/                  # Scripts (main.js, qr.js)
+│   └── 📂 templates/
+│       ├── base.html            # Base layout
+│       ├── dashboard.html       # Web dashboard
+│       ├── login.html           # Admin login
+│       ├── users.html           # User management
+│       ├── logs.html            # System logs viewer
+│       ├── analytics.html       # System statistics
+│       ├── settings.html        # System settings
+│       └── 📂 qr/               # QR management templates
 │
 ├── main.py                      # Main desktop GUI application
-├── enroll_user.py               # User enrollment CLI
 ├── enroll_user_gui.py           # User enrollment GUI
+├── enroll_user.py               # User enrollment CLI
+├── download_models.py           # Script to download ONNX face models
+├── sface.onnx                   # Face Recognition model
+├── yunet.onnx                   # Face Detection model
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # Project documentation
-├── LICENSE                      # MIT License
-└── .gitignore                   # Git ignore rules
+└── .env                         # Environment variables
 ```
 
 ---
