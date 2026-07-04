@@ -137,6 +137,8 @@ class UltrasonicSensorMonitor:
         self._callbacks = [c for c in self._callbacks if c is not cb]
 
     def start(self) -> bool:
+        if not GPIO_AVAILABLE:
+            return False
         if self._running:
             return True
         self._running = True
@@ -150,6 +152,7 @@ class UltrasonicSensorMonitor:
         return True
 
     def stop(self):
+        was_running = self._running
         self._running = False
         if self._thread:
             self._thread.join(timeout=2.0)
@@ -158,7 +161,8 @@ class UltrasonicSensorMonitor:
                 GPIO.cleanup((self.trig_pin, self.echo_pin))
             except Exception:
                 pass
-        logger.info("UltrasonicSensorMonitor stopped.")
+        if was_running:
+            logger.info("UltrasonicSensorMonitor stopped.")
 
     def _init_gpio(self):
         GPIO.setmode(GPIO.BCM)
@@ -184,7 +188,7 @@ class UltrasonicSensorMonitor:
         """
         # ── Simulation fast-path ──────────────────────────────────────────
         if not GPIO_AVAILABLE:
-            return random.uniform(3.0, 40.0)
+            return -1.0
 
         backoff = ULTRASONIC_RETRY_DELAY
         for attempt in range(ULTRASONIC_RETRIES):
@@ -329,9 +333,7 @@ class DoorController:
                 logger.error(f"DoorController: Failed to connect to Arduino on {target_port}: {e}")
                 self.simulation = True
         else:
-            self.simulation = True
-            # Start the dummy ultrasonic sensor anyway
-            self._ultrasonic.start()
+            self.simulation = False
 
     def _serial_read_loop(self):
         while self._serial_running and self._serial_conn:

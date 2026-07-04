@@ -56,7 +56,11 @@ except (ImportError, SystemExit, Exception):
                             continue
                     face_align = self.recognizer.alignCrop(img, face)
                     feature = self.recognizer.feature(face_align)
-                    encodings.append(feature[0].flatten())
+                    vec = feature[0].flatten()
+                    norm = np.linalg.norm(vec)
+                    if norm > 0:
+                        vec = vec / norm
+                    encodings.append(vec)
             return encodings
             
         def face_distance(self, face_encodings, face_to_compare):

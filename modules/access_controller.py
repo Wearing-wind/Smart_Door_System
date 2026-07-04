@@ -71,9 +71,9 @@ class ConfigEncryptor:
 class AccessController:
     """Orchestrates QR verification and outputs (door unlocking, logging, notification)."""
     
-    def __init__(self, door_controller: Optional[DoorController] = None):
+    def __init__(self, door_controller: Optional[Any] = None):
         self.qr_repo = QRRepository()
-        self.door_controller = door_controller or DoorController()
+        self.door_controller = door_controller
 
     def get_setting(self, key: str, default: Any = None) -> Any:
         """Fetch setting value from system_settings, with decrypt fallback."""

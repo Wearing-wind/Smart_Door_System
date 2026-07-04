@@ -51,9 +51,7 @@ def dashboard():
     recent_logs = qr_repo.access_log_repo.get_recent_logs(limit=10)
     
     # Door status mapping
-    from modules.door_control import DoorController
-    door_ctrl = DoorController()
-    door_status = door_ctrl.get_status()
+    door_status = "UNKNOWN (Hardware managed by main.py)"
     
     # Retrieve system settings (SMTP, webhooks, SMS)
     email_enabled = access_controller.get_setting("email_notifications_enabled", "false") == "true"
@@ -63,7 +61,7 @@ def dashboard():
         'qr/dashboard.html',
         stats=stats,
         recent_logs=recent_logs,
-        door_state=door_status.state.value,
+        door_state=door_status,
         email_enabled=email_enabled,
         webhook_enabled=webhook_enabled
     )

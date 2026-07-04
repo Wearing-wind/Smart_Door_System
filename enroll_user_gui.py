@@ -19,11 +19,8 @@ import cv2
 import numpy as np
 import io
 import contextlib
-try:
-    with contextlib.redirect_stdout(io.StringIO()):
-        import face_recognition
-except (ImportError, SystemExit, Exception):
-    face_recognition = None
+# The face_recognition library will be imported via the modules.face_recognition_module
+# which provides a fallback to OpenCV if the native library is missing.
 from PIL import Image, ImageTk
 import logging
 from pathlib import Path
@@ -33,7 +30,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from database.db_manager import UserRepository, DatabaseManager
-from modules.face_recognition_module import FaceEnrollment, CameraManager
+from modules.face_recognition_module import FaceEnrollment, CameraManager, face_recognition
 from config.settings import FACE_DETECTION_MODEL
 
 
@@ -460,14 +457,6 @@ Instructions:
     
     def enroll_face_only(self):
         """Start face enrollment."""
-        if face_recognition is None:
-            messagebox.showerror(
-                "Face Recognition Unavailable",
-                "The face_recognition library is not installed.\n\n"
-                "To install it on Windows with Python 3.14, you must first install the "
-                "Visual Studio C++ Build Tools. Face enrollment cannot proceed without it."
-            )
-            return
 
         if not self.validate_selection():
             return
