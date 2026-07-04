@@ -573,9 +573,8 @@ class FaceRecognitionEngine:
                         self._last_match_user_id = matched_user_id
                         self._consecutive_match_count = 1
                     
-                    # Only return FACE_MATCHED after N consecutive confirmations
                     if self._consecutive_match_count >= FACE_CONSECUTIVE_FRAMES:
-                        confidence = 1.0 - best_distance
+                        confidence = float(1.0 - best_distance)
                         label = f"{user_data['name']} ({confidence*100:.1f}%)"
                         frame_with_box = self._draw_face_box(
                             frame, scaled_location, label, (0, 255, 0)
@@ -601,7 +600,7 @@ class FaceRecognitionEngine:
                             user_id=user_data['user_id'],
                             user_name=user_data['name'],
                             employee_id=user_data['employee_id'],
-                            confidence=1.0 - best_distance,
+                            confidence=float(1.0 - best_distance),
                             face_location=scaled_location,
                             frame=frame_with_box
                         )
