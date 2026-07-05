@@ -1004,7 +1004,7 @@ copies or substantial portions of the Software.
 |------|---------|
 | 🏢 **Organization** | Sovryx Tech |
 | 🌍 **Country** | Nepal 🇳🇵 |
-| 📧 **Email** | [mohit@sovryxtech.com.np](mailto:mohit@sovryxtech.com.np) |
+| 📧 **Email** | [hello@mohitshrestha.name.np](mailto:hello@mohitshrestha.name.np) |
 | 🔗 **GitHub** | [@Mohit Stha](https://github.com/mohit282-cpu) |
 | 💼 **LinkedIn** | [Mohit Shrestha](#) |
 | 🌐 **Website** | [sovryxtech.com.np]() |
@@ -1035,7 +1035,7 @@ copies or substantial portions of the Software.
 - Join our community
 
 **📧 Direct Contact**
-- Email: [mohit@sovryx.com](mailto:mohit@sovryx.com)
+- Email: [hello@mohitshrestha.name.np](mailto:hello@mohitshrestha.name.np)
 - LinkedIn: [@Mohit Shrestha](#)
 - GitHub Issues: [@mention me](#)
 
@@ -1071,10 +1071,10 @@ We extend our gratitude to:
 
 Connect with us on social media:
 
-[![GitHub](https://img.shields.io/badge/GitHub-Wearing--wind-black?style=for-the-badge&logo=github)](https://github.com/Wearing-wind)
+[![GitHub](https://img.shields.io/badge/GitHub-Mohit--Stha-black?style=for-the-badge&logo=github)](https://github.com/mohit282-cpu)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Mohit%20Shrestha-blue?style=for-the-badge&logo=linkedin)](https://linkedin.com)
-[![Email](https://img.shields.io/badge/Email-Contact-red?style=for-the-badge&logo=gmail)](mailto:mohit@sovryx.com)
-[![Website](https://img.shields.io/badge/Website-Sovryx--Tech-green?style=for-the-badge&logo=firefox)](https://sovryx.com)
+[![Email](https://img.shields.io/badge/Email-Contact-red?style=for-the-badge&logo=gmail)](mailto:hello@mohitshrestha.name.np)
+[![Website](https://img.shields.io/badge/Website-Sovryx--Tech-green?style=for-the-badge&logo=firefox)](https://sovryx.com.np)
 
 </div>
 
