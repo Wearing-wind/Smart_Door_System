@@ -1,78 +1,146 @@
-/* QR Visitor Management System - SaaS style stylesheet */
+/* QR Visitor Management System - Premium SaaS style stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --glass-bg: rgba(30, 41, 59, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-shadow: rgba(0, 0, 0, 0.3);
-    --card-glow: rgba(59, 130, 246, 0.15);
+    --glass-bg: rgba(15, 23, 42, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: rgba(0, 0, 0, 0.4);
+    --card-glow: rgba(59, 130, 246, 0.25);
+    --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    --font-heading: 'Outfit', sans-serif;
+}
+
+/* Ambient Background Glows */
+.ambient-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+    pointer-events: none;
+    animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.5;
+}
+
+.glow-1 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(0, 0, 0, 0) 70%);
+    top: -100px;
+    left: -100px;
+}
+
+.glow-2 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+    bottom: -50px;
+    right: 10%;
+    animation-delay: -5s;
+}
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(50px, 80px) scale(1.1); }
+    100% { transform: translate(-30px, 40px) scale(0.9); }
+}
+
+/* Base text tweaks for premium feel */
+h1, h2, h3, .qr-stat-info h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
 }
 
 /* Glassmorphism Card style */
 .qr-glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border);
-    border-radius: 1rem;
-    box-shadow: 0 8px 32px 0 var(--glass-shadow);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 40px 0 var(--glass-shadow);
+    padding: 1.75rem;
+    margin-bottom: 1.75rem;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.qr-glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    z-index: 11;
 }
 
 .qr-glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4), 0 0 15px var(--card-glow);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px 0 rgba(0, 0, 0, 0.5), 0 0 30px var(--card-glow);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Dashboard Statistics Widgets Grid */
 .qr-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 10;
 }
 
 .qr-stat-card {
-    background: rgba(30, 41, 59, 0.45);
-    border: 1px solid var(--glass-border);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    transition: transform 0.2s;
+    gap: 1.25rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .qr-stat-card:hover {
-    transform: scale(1.02);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.15);
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 1));
 }
 
 .qr-stat-icon {
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 0.5rem;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), 0 4px 10px rgba(0,0,0,0.2);
 }
 
-.qr-stat-icon.bg-primary { background-color: rgba(59, 130, 246, 0.25); color: #3b82f6; }
-.qr-stat-icon.bg-success { background-color: rgba(34, 197, 94, 0.25); color: #22c55e; }
-.qr-stat-icon.bg-info { background-color: rgba(6, 182, 212, 0.25); color: #06b6d4; }
-.qr-stat-icon.bg-warning { background-color: rgba(245, 158, 11, 0.25); color: #f59e0b; }
-.qr-stat-icon.bg-danger { background-color: rgba(239, 68, 68, 0.25); color: #ef4444; }
+.qr-stat-icon.bg-primary { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.4)); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+.qr-stat-icon.bg-success { background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.4)); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+.qr-stat-icon.bg-info { background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.4)); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); }
+.qr-stat-icon.bg-warning { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.4)); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.qr-stat-icon.bg-danger { background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.4)); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
 
 .qr-stat-info h3 {
-    font-size: 1.75rem;
+    font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.25rem;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .qr-stat-info p {
     color: var(--text-muted);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 /* Door Scanner Camera Feed Display */
