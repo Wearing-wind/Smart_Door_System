@@ -12,9 +12,14 @@
         <h1><i class="fas fa-qrcode"></i> QR Pass Management</h1>
         <p>Secure Visitor Management & Card Control System</p>
     </div>
-    <button class="btn btn-primary" onclick="document.getElementById('add-visitor-modal').style.display='flex'">
-        <i class="fas fa-user-plus"></i> Register Visitor
-    </button>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <a href="{{ url_for('qr.list_passes') }}" class="btn btn-secondary">
+            <i class="fas fa-id-card"></i> Manage Passes
+        </a>
+        <button class="btn btn-primary" onclick="document.getElementById('add-visitor-modal').style.display='flex'">
+            <i class="fas fa-user-plus"></i> Register Visitor
+        </button>
+    </div>
 </div>
 
 <!-- Statistics widgets -->
@@ -71,13 +76,6 @@
 </div>
 
 <div class="qr-form-section">
-    <div class="qr-glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem;">
-        <div></div>
-        <a href="{{ url_for('qr.list_passes') }}" class="btn btn-primary">
-            <i class="fas fa-id-card"></i> Manage Passes
-        </a>
-    </div>
-
     <!-- Recent Activity -->
     <div class="qr-glass-card">
         <div class="card-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
